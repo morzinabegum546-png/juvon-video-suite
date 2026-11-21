@@ -1,0 +1,25 @@
+{
+  "name": "juvon-video-suite-final",
+  "version": "1.0.0",
+  "description": "Juvon Video Editor, Reels Maker & Story Studio",
+  "main": "electron-main.js",
+  "scripts": {
+    "build": "echo 'Static suite ready'",
+    "start": "electron ."
+  },
+  "build": {
+    "appId": "com.juvon.videoeditor",
+    "productName": "Juvon Video Editor",
+    "asar": false,
+    "npmRebuild": false,
+    "files": [
+      "public/**/*",
+      "electron-main.js",
+      "package.json"
+    ],
+    "win": {
+      "target": "portable",
+      "icon": "public/icon-512.png"
+    }
+  }
+}

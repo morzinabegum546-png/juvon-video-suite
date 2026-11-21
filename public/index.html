@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Juvon ভিডিও এডিটর ও স্টুডিও</title>
+<link rel="icon" type="image/png" href="logo-mark.png">
+<link rel="apple-touch-icon" href="icon-512.png">
+<meta name="theme-color" content="#09090d">
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@500;600;700&family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0}
+body{min-height:100vh;background:#09090d;color:#f4f4f6;font-family:'Hind Siliguri',Inter,sans-serif;display:flex;align-items:center;justify-content:center;padding:24px}
+.wrap{max-width:920px;width:100%;display:flex;flex-direction:column;gap:28px}
+.hd{text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px}
+.logo{width:clamp(190px,36vw,270px);height:auto;display:block;margin-bottom:4px}
+h1{font-size:clamp(26px,4vw,38px);background:linear-gradient(90deg,#fff,#9be7ff,#ffd27a);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{color:#9ca3af;font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media(max-width:640px){.grid{grid-template-columns:1fr}}
+.card{background:linear-gradient(145deg,#15151e,#101017);border:1px solid #282836;border-radius:18px;padding:22px;text-decoration:none;color:inherit;display:flex;flex-direction:column;justify-content:space-between;gap:16px;transition:transform .18s,border-color .18s,box-shadow .18s}
+.card:hover{transform:translateY(-3px);border-color:#25d5f0;box-shadow:0 12px 30px rgba(0,0,0,.5)}
+.ctop{display:flex;align-items:center;justify-content:space-between}
+.ic{font-size:34px}
+.bdg{font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;background:rgba(255,255,255,.07);color:#d1d5db}
+.card h2{font-size:19px;color:#fff;margin-bottom:4px}
+.card b{font-size:12.5px;color:#25d5f0;display:block;margin-bottom:8px}
+.card p{font-size:13px;color:#9ca3af;line-height:1.55}
+.go{font-size:13px;font-weight:700;color:#25d5f0;display:flex;align-items:center;gap:6px}
+/* সরাসরি এডিটর কার্ড — লোগোর সোনালি রঙে আলাদা করা */
+.card.ed{background:linear-gradient(145deg,#1b1810,#121016);border-color:#4a3d1c}
+.card.ed:hover{border-color:#f5b82e}
+.card.ed .bdg{background:rgba(245,184,46,.14);color:#ffd27a}
+.card.ed b,.card.ed .go{color:#ffc94d}
+.card:focus-visible{outline:2px solid #f5b82e;outline-offset:3px}
+</style>
+</head>
+<body>
+<div class="wrap">
+ <div class="hd">
+  <img class="logo" src="logo.png" alt="Juvon Video Editor" width="860" height="574">
+  <h1>Juvon ভিডিও এডিটর ও স্টুডিও</h1>
+  <p class="sub">নিচের যেকোনো একটি প্যানেল বেছে নিয়ে কাজ শুরু করুন</p>
+ </div>
+ <div class="grid">
+  <a class="card" href="vlog.html">
+   <div>
+    <div class="ctop"><span class="ic">🎬</span><span class="bdg">Vlog & Editor</span></div>
+    <h2>ভ্লগ ওভারলে ও Juvon এডিটর</h2>
+    <b>ক্যাপশন কার্ড, মোশন গ্রাফিক্স ও মাল্টি-ট্র্যাক এডিটর</b>
+    <p>আপনার নিজস্ব Juvon ভিডিও এডিটর (মাল্টি-ট্র্যাক অডিও/ভিডিও টাইমলাইন, ৯০+ ট্রানজিশন, ভয়েস রেকর্ডিং, প্রিমিয়াম ক্যাপশন ও Video-Match ভয়েস)।</p>
+   </div>
+   <div class="go">ওপেন করুন →</div>
+  </a>
+  <a class="card" href="reels.html">
+   <div>
+    <div class="ctop"><span class="ic">📱</span><span class="bdg">Reels Maker</span></div>
+    <h2>রিলস মেকার (Reels Maker)</h2>
+    <b>ছবি আর লেখা দিয়ে শর্ট ভিডিও</b>
+    <p>১০+ ডিজাইন, বাংলা ফন্ট, অ্যানিমেশন, স্টিকার, ওয়াটারমার্ক কভার ও হাই-কোয়ালিটি MP4 এক্সপোর্ট।</p>
+   </div>
+   <div class="go">ওপেন করুন →</div>
+  </a>
+  <a class="card" href="story.html">
+   <div>
+    <div class="ctop"><span class="ic">📖</span><span class="bdg">Story Maker</span></div>
+    <h2>গল্পের ভিডিও মেকার (Story Maker)</h2>
+    <b>ভয়েস ও অটো-টাইমিং গল্পের ভিডিও</b>
+    <p>ভয়েস অডিও ও ইন-বিল্ট Gemini অটো-ট্রান্সক্রিপ্ট, হেডফোন ইন্ট্রো, রোমান্টিক ও প্রিমিয়াম বাংলা/ইংরেজি স্টোরি ক্যাপশন।</p>
+   </div>
+   <div class="go">ওপেন করুন →</div>
+  </a>
+  <a class="card ed" href="vlog.html#editor">
+   <div>
+    <div class="ctop"><span class="ic">✂</span><span class="bdg">Direct Editor</span></div>
+    <h2>Juvon ভিডিও এডিটর প্যানেল</h2>
+    <b>সরাসরি এডিটর খুলুন — অন্য কোনো ধাপ ছাড়াই</b>
+    <p>ক্লিক করলেই মাল্টি-ট্র্যাক টাইমলাইনসহ পুরো এডিটর প্যানেল ওপেন হবে। ক্লিপ ইমপোর্ট, ট্রিম ও স্প্লিট, ট্রানজিশন, ভয়েস রেকর্ডিং করে সরাসরি Export করুন।</p>
+   </div>
+   <div class="go">এডিটর ওপেন করুন →</div>
+  </a>
+ </div>
+</div>
+</body>
+</html>

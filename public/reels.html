@@ -1,0 +1,636 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>রিলস মেকার — ছবি আর লেখা দিয়ে শর্ট ভিডিও</title>
+<meta name="description" content="ছবি আর নিজের লেখা দিয়ে মিনিটেই রিলস ও শর্ট ভিডিও বানান — ১০টি ডিজাইন, ১০টি লেখার স্টাইল, অ্যানিমেশন ও মিউজিক।">
+<meta property="og:title" content="রিলস মেকার"><meta property="og:description" content="ছবি আর লেখা দিয়ে প্রিমিয়াম রিলস ভিডিও"><link rel="icon" type="image/png" href="logo-mark.png">
+<link rel="apple-touch-icon" href="icon-512.png">
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@500;600;700&family=Noto+Serif+Bengali:wght@600;700&family=Tiro+Bangla&family=Galada&family=Anek+Bangla:wght@600;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#0b0b10;color:#eceef4;font:15px/1.5 "Hind Siliguri",system-ui,sans-serif;padding:max(12px,env(safe-area-inset-top)) 12px 40px}
+h1{font-size:21px;margin:6px auto 14px;max-width:1100px;background:linear-gradient(90deg,#ffd27a,#ff7aa8);-webkit-background-clip:text;background-clip:text;color:transparent}
+main{display:grid;gap:14px;max-width:1100px;margin:auto;grid-template-columns:minmax(0,380px) 1fr;align-items:start}
+.pv{position:sticky;top:10px}
+@media(max-width:820px){main{grid-template-columns:1fr}.pv{position:static}}
+canvas,video{width:100%;border-radius:14px;background:#000;display:block}
+video{margin-top:10px;display:none}
+.c{background:#15151d;border:1px solid #262633;border-radius:14px;padding:12px;margin-bottom:12px}
+.c h2{font-size:15px;margin:0 0 6px;color:#ffd27a}
+label{display:block;font-size:13px;color:#a9adbd;margin:9px 0 3px}
+input,select,textarea{width:100%;background:#0e0e14;color:#fff;border:1px solid #2b2b3a;border-radius:10px;padding:9px;font:inherit}
+textarea{min-height:120px;resize:vertical;font-size:16px}
+input[type=range]{padding:0}input[type=color]{height:40px;padding:2px}input[type=checkbox]{width:auto}
+.r{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.r>*{flex:1;min-width:70px}
+button{background:#23232f;color:#fff;border:1px solid #33334a;border-radius:10px;padding:10px 12px;font:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid #ffd27a;outline-offset:2px}
+.p{background:linear-gradient(135deg,#ff9f43,#ff5d8f);border:0;font-weight:700;color:#201000;width:100%;margin-top:8px}
+.t{width:64px;height:64px;border-radius:8px;background:#000 center/cover;position:relative;display:inline-block;margin:6px 6px 0 0}
+.t button{position:absolute;top:-6px;right:-6px;padding:0 7px;border-radius:99px;line-height:20px}
+.q{display:flex;gap:6px;margin-top:6px}.q button:first-child{flex:1;text-align:left;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+small{color:#8b8fa3}
+.t button.e{right:auto;left:-6px}.t i{position:absolute;bottom:2px;left:2px;background:#000b;font-size:11px;padding:0 5px;border-radius:6px;font-style:normal;color:#ffd27a}
+.sp{display:grid;grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:6px;margin-top:6px}.sp button{font-size:24px;padding:4px 0;line-height:1.3}
+.rb button{flex:1;min-width:52px}.rb button.on{background:#ffd27a;color:#201000;font-weight:700}
+.cv-st{touch-action:none;cursor:grab}
+#st{margin:8px 0 0;color:#8fd19e;font-size:13px;min-height:20px}
+</style>
+</head>
+<body>
+<h1>🎬 রিলস মেকার — ছবি সিলেক্ট করুন, লেখা দিন, ভিডিও নামান</h1>
+<main>
+<div class="pv">
+  <canvas id="cv"></canvas>
+  <div class="r" style="margin-top:10px"><button id="pl">▶ চালান</button><button id="hq" class="p" style="margin:0;flex:2">💎 সেরা কোয়ালিটি ভিডিও (MP4)</button></div>
+  <div class="r" style="margin-top:6px"><button id="ex" style="flex:1">⚡ দ্রুত ভিডিও (রিয়েল-টাইম, কম মান)</button></div>
+  <small>💎 সেরা কোয়ালিটি: প্রতিটা ফ্রেম আলাদা করে আঁকে, কয়েক গুণ বেশি বিটরেটে MP4 বানায় — সময় বেশি লাগে, কিন্তু মান অরিজিনালের কাছাকাছি।</small>
+  <input type="range" id="sk" min="0" max="1000" value="0" style="margin-top:10px" aria-label="সময়">
+  <div id="st"></div>
+  <div id="dl-row" class="r" style="display:none;margin-top:8px;gap:8px">
+    <a id="dl-btn" class="p" style="flex:2;text-align:center;text-decoration:none;padding:10px 12px;border-radius:10px;font-weight:700;background:linear-gradient(135deg,#25d5f0,#0ea5e9);color:#06121a;cursor:pointer">⬇ ভিডিও ডাউনলোড করুন</a>
+    <button id="sh-btn" type="button" style="flex:1;display:none">📤 শেয়ার / সেভ</button>
+  </div>
+  <video id="vp" controls playsinline></video>
+</div>
+<div>
+  <div class="c"><button id="pc" class="p" style="margin:0">📋 ফর্ম কপি করুন</button></div>
+  <div class="c"><h2>📷 ছবি ও ভিডিও ক্লিপ</h2>
+    <button id="yt-open" type="button" style="width:100%;margin:4px 0 8px;background:linear-gradient(135deg,#dc2626,#991b1b);color:#fff;font-weight:700;border:none;border-radius:8px;padding:8px 10px;cursor:pointer">▶ YouTube / বড় ভিডিও থেকে নির্দিষ্ট অংশ কাটুন</button>
+    <div id="yt-box" style="display:none;background:#12121a;border:1px solid #2e2e40;border-radius:10px;padding:10px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <b style="font-size:12.5px;color:#fca5a5">✂ নির্দিষ্ট অংশ রাখুন (বাকিটা বাদ যাবে)</b>
+        <button id="yt-cls" type="button" style="padding:2px 8px;font-size:11px">✕</button>
+      </div>
+      <input id="yt-url" type="text" placeholder="YouTube ভিডিও বা Shorts লিংক পেস্ট করুন…" style="width:100%;margin-bottom:6px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:4px">
+        <label style="font-size:11px">শুরু (যেমন 01:15 বা 75)<input id="yt-s" type="text" value="00:00" style="width:100%"></label>
+        <label style="font-size:11px">শেষ (যেমন 01:26 বা 86)<input id="yt-e" type="text" value="00:11" style="width:100%"></label>
+      </div>
+      <div id="yt-len" style="font-size:11px;color:#fcd34d;margin-bottom:6px">নির্বাচিত অংশ: ১১.০ সেকেন্ড (বাকি সব বাদ যাবে)</div>
+      <div id="yt-prev" style="display:none;margin-bottom:8px;border-radius:8px;overflow:hidden;background:#000">
+        <iframe id="yt-if" width="100%" height="170" style="border:0;display:block" allow="autoplay;encrypted-media" allowfullscreen></iframe>
+      </div>
+      <div class="r" style="gap:6px;margin-bottom:6px">
+        <button id="yt-show" type="button" style="flex:1">👁 অংশটি প্রিভিউ দেখুন</button>
+        <button id="yt-fetch" type="button" class="p" style="flex:1">✂ সরাসরি কেটে আনুন</button>
+      </div>
+      <input id="yt-api" type="text" placeholder="ঐচ্ছিক: Cobalt/yt-dlp API URL (যেমন http://localhost:9000)" style="width:100%;font-size:11px;margin-bottom:6px">
+      <div style="font-size:11px;color:#9ca3af;line-height:1.45;margin-bottom:6px">YouTube থেকে সরাসরি না এলে নিচের বাটনে ডাউনলোড করে বড় ভিডিও ফাইলটি দিন — <b>শুধু আপনার সেট করা শুরু–শেষ অংশটুকু</b> কেটে রাখা হবে এবং বাকি পুরো ভিডিও বাদ দেওয়া হবে:</div>
+      <div class="r" style="gap:6px">
+        <button id="yt-ext" type="button" style="flex:1">🌐 ডাউনলোডার খুলুন</button>
+        <label style="flex:1;text-align:center;background:#1f2937;border:1px solid #374151;border-radius:8px;padding:7px;font-size:11.5px;cursor:pointer;font-weight:600">✂ ভিডিও দিয়ে শুধু এই অংশ রাখুন<input id="yt-file" type="file" accept="video/*" style="display:none"></label>
+      </div>
+      <div id="yt-msg" style="font-size:11px;color:#93c5fd;margin-top:6px"></div>
+    </div>
+    <input type="file" id="im" accept="image/*,video/*" multiple>
+    <small>ছবি আর ভিডিও ক্লিপ মিলিয়ে দেওয়া যায়। একাধিক হলে সময় ভাগ হয়ে একটার পর একটা আসবে (ভিডিওর নিজের শব্দ বাদ যাবে, ছোট ক্লিপ লুপ হবে)।</small>
+    <div id="th"></div>
+    <div id="ed" class="c" style="display:none;margin:10px 0 0;border-color:#ffd27a"><h2 id="edt">✎ ক্লিপ এডিট</h2>
+      <label>গতি (স্লো মোশন / ফাস্ট)</label>
+      <div class="r rb" id="edr"><button data-r="0.25">০.২৫×</button><button data-r="0.5">০.৫×</button><button data-r="0.75">০.৭৫×</button><button data-r="1">স্বাভাবিক</button><button data-r="1.5">১.৫×</button><button data-r="2">২×</button></div>
+      <small>০.৫× মানে অর্ধেক গতি — ভিডিও দ্বিগুণ ধীরে চলবে। স্লো করলে ক্লিপের শুরুর অংশটুকুই দেখা যাবে, তাই দরকারে নিচের বাটনে সময় ঠিক করে নিন।</small>
+      <div class="r" style="margin-top:8px"><button id="edp">▶ এই ক্লিপ দেখুন</button><button id="edc">✔ বন্ধ করুন</button></div>
+    </div>
+    <label><input type="checkbox" id="vs"> ভিডিও ক্লিপের নিজের শব্দ রাখুন</label>
+    <button id="vd" style="width:100%;margin-top:6px">⏱ ভিডিও ক্লিপের দৈর্ঘ্য অনুযায়ী সময় সেট করুন</button>
+  </div>
+  <div class="c"><h2>🩹 ওয়াটারমার্ক / লোগো ঢাকুন</h2>
+    <small>ভিডিওতে আগের কোনো লোগো বা ওয়াটারমার্ক থাকলে তার ওপর ঢাকনা বসান। কোণার বাটনে চাপুন, তারপর প্রিভিউতে টেনে লোগোর ওপর মেলান; ডান-নিচের কোণার ছোট চতুর্ভুজ টেনে সাইজ বদলান। শুধু নিজের বা অনুমতি পাওয়া ভিডিওতে ব্যবহার করুন।</small>
+    <div class="r rb" style="margin-top:8px"><button data-k="tl">↖ উপরে বাঁ</button><button data-k="tr">↗ উপরে ডান</button><button data-k="bl">↙ নিচে বাঁ</button><button data-k="br">↘ নিচে ডান</button><button data-k="c">⊕ মাঝখানে</button></div>
+    <div id="cc2" style="display:none;margin-top:8px;border:1px dashed #ffd27a;border-radius:10px;padding:0 10px 10px">
+      <label for="cm">ঢাকার ধরন</label><select id="cm"><option value="blur">ঝাপসা (ব্লার)</option><option value="mosaic">মোজাইক</option><option value="patch">আশপাশ থেকে ভরাট (সবচেয়ে ভালো মেলে)</option><option value="solid">সলিড রঙ</option><option value="label">নিজের লেখা / পেজের নাম বসান</option></select>
+      <div id="cmx" style="display:none"><label for="ck">রঙ</label><input type="color" id="ck" value="#000000"><label for="ct">লেখা (খালি থাকলে চ্যানেলের নাম)</label><input id="ct" placeholder="যেমন: You & Me"></div>
+      <label for="cw">চওড়া</label><input type="range" id="cw" min="4" max="100" value="26">
+      <label for="ch2">উচ্চতা</label><input type="range" id="ch2" min="1" max="40" value="6">
+      <div class="r"><div><label for="c0">কখন আসবে (সেকেন্ড)</label><input type="number" id="c0" min="0" value="0"></div><div><label for="c1">কখন যাবে (০ = শেষ পর্যন্ত)</label><input type="number" id="c1" min="0" value="0"></div></div>
+      <button id="cd" style="width:100%;margin-top:8px">✖ এই ঢাকনা বাদ দিন</button>
+    </div>
+    <button id="cx" style="width:100%;margin-top:8px">🗑 সব ঢাকনা মুছুন</button>
+  </div>
+  <div class="c"><h2>✨ স্টিকার</h2>
+    <div class="sp" id="sp"></div>
+    <div class="r" style="margin-top:8px"><button id="sr">🎲 র‍্যান্ডম স্টিকার</button><button id="sx">🗑 সব মুছুন</button></div>
+    <label for="sf">নিজের স্টিকার (PNG/ছবি)</label><input type="file" id="sf" accept="image/*">
+    <small>স্টিকারে চাপ দিলে ভিডিওর ওপর বসবে। প্রিভিউতে আঙুল/মাউসে টেনে সরান।</small>
+    <div id="sc" style="display:none;margin-top:8px;border:1px dashed #ffd27a;border-radius:10px;padding:0 10px 10px">
+      <label for="ss">সাইজ</label><input type="range" id="ss" min="4" max="60" value="16">
+      <label for="sa">ঘোরানো</label><input type="range" id="sa" min="-180" max="180" value="0">
+      <div class="r"><div><label for="s0">কখন আসবে (সেকেন্ড)</label><input type="number" id="s0" min="0" value="0"></div><div><label for="s1">কখন যাবে (০ = শেষ পর্যন্ত)</label><input type="number" id="s1" min="0" value="0"></div></div>
+      <button id="sd" style="width:100%;margin-top:8px">✖ এই স্টিকার বাদ দিন</button>
+    </div>
+  </div>
+  <div class="c"><h2>✍ লেখা</h2>
+    <textarea id="tx" placeholder="প্রতিটি লাইন আলাদা লিখুন। কোনো লাইনের শুরুতে * দিলে সেটা হাইলাইট রঙে আসবে।">ঘরের অভাব হলে-
+গাছতলায় কাটিয়ে দেওয়া যায়
+কিন্তু, ঘরের মানুষের অভাব হলে
+*তাকে কোথায় খুঁজে পাই?</textarea>
+    <label for="au">লেখকের নাম</label><input id="au" value="মনির আহমেদ শিশির">
+    <label for="wm">চ্যানেল / পেজের নাম (ছবির কোণায় ছোট করে)</label><input id="wm" placeholder="ঐচ্ছিক">
+    <div id="szb" style="border:1px dashed #ffd27a;border-radius:10px;padding:0 10px 10px;margin-top:10px">
+      <label for="tz" style="color:#ffd27a">🔠 লেখার সাইজ: <b id="tzv">১০০</b>%</label>
+      <div class="q" style="align-items:center"><button type="button" id="tzm" aria-label="লেখা ছোট করুন" style="flex:0 0 46px;text-align:center">A−</button><input type="range" id="tz" min="40" max="200" step="5" value="100" style="flex:1;padding:0"><button type="button" id="tzp" aria-label="লেখা বড় করুন" style="flex:0 0 46px;text-align:center">A+</button></div>
+      <label for="az">✒ লেখকের নামের সাইজ: <b id="azv">১০০</b>%</label>
+      <input type="range" id="az" min="40" max="220" step="5" value="100">
+      <button type="button" id="tzr" style="width:100%;margin-top:8px">↺ সাইজ আগের মতো করুন (১০০%)</button>
+      <small style="display:block;margin-top:6px;color:#a9adbd">স্লাইডার টানলেই প্রিভিউতে সাথে সাথে বদলাবে। বড় করলে লেখা নিজে থেকে ভেঙে নিচের লাইনে নামবে।</small>
+    </div>
+    <div class="r" style="margin-top:8px"><button id="sv">💾 লেখাটা সেভ করুন</button></div>
+    <div id="ql"></div>
+  </div>
+  <div class="c"><h2>🎨 স্টাইল</h2>
+    <label for="ly">ডিজাইন</label><select id="ly"></select>
+    <div id="cinf" style="display:none;border:1px dashed #ffd27a;border-radius:10px;padding:0 10px 10px;margin-top:8px"><small style="display:block;margin-top:8px">🎬 সিনেমা পট্টি বেছেছেন — নিচের ঘরে লিখলে উপরে/নিচের কালো পট্টিতে লেখা আসবে</small><label for="tt">🎬 উপরের পট্টির লেখা</label><textarea id="tt" style="min-height:60px" placeholder="যেমন: গল্পের নাম"></textarea><label for="tb">🎬 নিচের পট্টির লেখা</label><textarea id="tb" style="min-height:60px" placeholder="যেমন: লেখকের নাম / পেজের নাম"></textarea></div>
+    <label for="ft">লেখার ফন্ট</label>
+    <select id="ft"><option value="hind">Hind Siliguri</option><option value="serif">Noto Serif Bengali</option><option value="tiro">Tiro Bangla</option><option value="anek">Anek Bangla</option><option value="galada">Galada (হাতের লেখা)</option></select>
+    <label for="ts">লেখার স্টাইল</label><select id="ts"><option value="plain">সাধারণ</option><option value="gold">সোনালী গ্রেডিয়েন্ট</option><option value="glow">নরম গ্লো</option><option value="outline">কালো আউটলাইন</option><option value="marker">মার্কার হাইলাইট</option><option value="hlout">হাইলাইট লাইনে আউটলাইন</option></select>
+    <div class="r"><div><label for="cc">কার্ডের রঙ</label><input type="color" id="cc"></div><div><label for="tc">লেখার রঙ</label><input type="color" id="tc"></div><div><label for="hc">হাইলাইট</label><input type="color" id="hc"></div></div>
+    <div class="r"><div><label for="ar">মাপ</label><select id="ar"><option value="orig">🎯 অরিজিনাল (ভিডিওর নিজের মাপ)</option><option value="1.7778">৯:১৬ রিলস</option><option value="1.25">৪:৫</option><option value="1">১:১</option></select></div>
+    <div><label for="qs">কোয়ালিটি</label><select id="qs"><option value="720">HD ৭২০</option><option value="1080">Full HD ১০৮০</option></select></div></div>
+    <label for="fm">ভিডিও ফরম্যাট</label><select id="fm"><option value="auto">স্বয়ংক্রিয় (MP4, না হলে WebM)</option><option value="webm">WebM — ফোনে বেশি নির্ভরযোগ্য</option><option value="mp4">MP4</option></select>
+   <label for="fps">ফ্রেম রেট</label><select id="fps"><option value="30">৩০ fps</option><option value="60">৬০ fps (বেশি মসৃণ, ফাইল বড়)</option></select>
+    <label for="pf">ছবির কালার গ্রেড</label><select id="pf"><option value="">স্বাভাবিক</option><option value="grayscale(1) contrast(1.1)">সাদা-কালো</option><option value="sepia(.35) saturate(1.2) contrast(1.05)">উষ্ণ সিনেমাটিক</option><option value="hue-rotate(-12deg) saturate(.9) brightness(.95)">ঠান্ডা নীলচে</option><option value="saturate(1.4) contrast(1.1)">উজ্জ্বল ভিভিড</option></select>
+    <label for="fx">ছবির ওপর ইফেক্ট</label><select id="fx"><option value="none">নেই</option><option value="dust">সোনালী ধুলোকণা</option><option value="rain">বৃষ্টি</option><option value="petal">ঝরা পাপড়ি</option><option value="snow">তুষার / বোকে</option></select>
+    <label><input type="checkbox" id="gl" checked> ফিল্ম গ্রেইন (সিনেমার মতো দানা)</label>
+    <label><input type="checkbox" id="vg" checked> কোণায় হালকা কালো ছায়া (ভিগনেট)</label>
+    <label><input type="checkbox" id="fo" checked> শুরু ও শেষে ফেড</label>
+  </div>
+  <div class="c"><h2>🎞 অ্যানিমেশন ও সময়</h2>
+    <label for="an">লেখা যেভাবে আসবে</label>
+    <select id="an"><option value="none">স্থির — কোনো অ্যানিমেশন নেই</option><option value="fade">ফেড ইন</option><option value="rise">নিচ থেকে উঠে আসা</option><option value="line">লাইন ধরে ধরে</option><option value="word">শব্দ ধরে ধরে</option><option value="type">টাইপ হওয়ার মতো</option><option value="slide">শব্দ বাঁ দিক থেকে স্লাইড</option><option value="zoom">শব্দ বড় থেকে ছোট হয়ে</option></select>
+    <label for="dur">ভিডিওর দৈর্ঘ্য: <b id="dv">10</b> সেকেন্ড</label>
+    <input type="range" id="dur" min="2" max="600" value="10">
+    <div class="r" style="margin-top:8px"><button data-d="5">৫</button><button data-d="10">১০</button><button data-d="12">১২</button><button data-d="20">২০</button><button data-d="30">৩০</button></div>
+  </div>
+  <div class="c"><h2>🎵 ব্যাকগ্রাউন্ড মিউজিক (ঐচ্ছিক)</h2>
+    <input type="file" id="mu" accept="audio/*">
+    <div class="r"><div><label for="mv">ভলিউম</label><input type="range" id="mv" min="0" max="100" value="60"></div><div><label for="ms">শুরু (সেকেন্ড)</label><input type="number" id="ms" min="0" value="0"></div></div>
+    <small>না দিলে ভিডিও নিঃশব্দ হবে। শেষ দেড় সেকেন্ডে মিউজিক ধীরে মিলিয়ে যায়।</small>
+  </div>
+</div>
+</main>
+<script>
+let GP=null;const $=s=>document.querySelector(s),cl=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
+const FT={hind:['Hind Siliguri',600],serif:['Noto Serif Bengali',700],tiro:['Tiro Bangla',400],anek:['Anek Bangla',700],galada:['Galada',400]};
+const LY={
+ red:{n:'লাল দানাদার কার্ড (উপরে) + ছবি',pos:'top',ch:.5,ph:.8,card:'#7a1b1b',text:'#ffffff',hl:'#ffd7a8',gr:.16,ft:'hind',al:'left'},
+ paper:{n:'কাগজের কার্ড (উপরে) + ছবি',pos:'top',ch:.4,ph:.55,card:'#efe8dc',text:'#2b2520',hl:'#b3261e',gr:.07,ft:'serif',al:'left'},
+ cream:{n:'ছবি (উপরে) + ক্রিম কার্ড (নিচে)',pos:'bottom',ch:.62,ph:.6,card:'#f8f1dc',text:'#111111',hl:'#d4143c',gr:.03,ft:'hind',al:'center',sig:1},
+ over:{n:'ছবির ওপরেই লেখা',pos:'over',ch:0,ph:.72,card:'#000000',text:'#ffffff',hl:'#ffd166',gr:0,ft:'hind',al:'center',ts:'glow'},
+ over2:{n:'🖍 মার্কার হাইলাইট — ছবির ওপর',pos:'over',ch:0,ph:.72,card:'#000000',text:'#111111',hl:'#ffd23f',gr:0,ft:'anek',al:'center',ts:'marker'},
+ full:{n:'🎞 পুরো স্ক্রিন ছবি + মাঝখানে লেখা',pos:'full',ch:0,ph:1,card:'#000000',text:'#ffffff',hl:'#ffd166',gr:0,ft:'serif',al:'center',ts:'glow'},
+ night:{n:'🌙 রাতের নীল কার্ড + ছবি',pos:'top',ch:.5,ph:.8,card:'#0b1530',c2:'#1b2f63',text:'#f3e3b3',hl:'#ffffff',gr:.05,ft:'serif',al:'center',qm:1,ts:'glow'},
+ wine:{n:'🍷 গোলাপি-ওয়াইন গ্রেডিয়েন্ট + ছবি',pos:'top',ch:.5,ph:.8,card:'#4a0f2b',c2:'#b83a68',text:'#ffffff',hl:'#ffd1dc',gr:.06,ft:'hind',al:'left',qm:1,ts:'plain'},
+ gold:{n:'👑 কালো-সোনালী কার্ড (নিচে) + ছবি',pos:'bottom',ch:.55,ph:.7,card:'#0a0a0a',c2:'#201a10',text:'#f4d58d',hl:'#ffffff',gr:.05,ft:'serif',al:'center',qm:1,ts:'gold'},
+ sepia:{n:'📜 পুরনো চিঠি (সেপিয়া) + ছবি',pos:'top',ch:.42,ph:.6,card:'#e8d5b0',c2:'#d3b887',text:'#3a2514',hl:'#9b2d20',gr:.1,ft:'tiro',al:'left',ts:'plain'},
+ ocean:{n:'🌊 সবুজ-নীল গ্রেডিয়েন্ট + ছবি',pos:'top',ch:.46,ph:.78,card:'#05323b',c2:'#0e7c86',text:'#ffffff',hl:'#ffe08a',gr:.05,ft:'anek',al:'left',ts:'plain'},
+ fade:{n:'⚪ সাদা ফেড + ছবি/ভিডিও (রিলস স্টাইল)',pos:'over',ch:0,ph:1.25,card:'#000000',text:'#1a1a1a',hl:'#ffd400',gr:0,ft:'anek',al:'center',ts:'hlout',fade:1},
+ cinema:{n:'🎬 সিনেমা পট্টি — উপরে ও নিচে লেখার ঘর',pos:'bars',ch:0,ph:.62,card:'#000000',text:'#ffffff',hl:'#ffd166',gr:0,ft:'serif',al:'center',ts:'plain',bars:1}};
+function gp(){return GP||(GP=g.createPattern(gn,'repeat'))}
+const S={ed:-1,imgs:[],st:[],sel:-1,cov:[],csel:-1,music:false,t:0,playing:false,rec:false},cv=$('#cv'),g=cv.getContext('2d');
+let DUR=10,W=720,H=1280,recorder=null,actx,au,gain,dest,cust=0;
+Object.entries(LY).forEach(([k,v])=>$('#ly').add(new Option(v.n,k)));
+const gn=document.createElement('canvas');gn.width=gn.height=200;
+{const q=gn.getContext('2d'),d=q.createImageData(200,200);for(let i=0;i<d.data.length;i+=4){const v=Math.random()*255;d.data[i]=d.data[i+1]=d.data[i+2]=v;d.data[i+3]=255}q.putImageData(d,0,0)}
+function showF(){$('#cinf').style.display=LY[$('#ly').value].bars?'block':'none'}
+function applyLayout(){const L=LY[$('#ly').value];showF();cust=0;$('#ts').value=L.ts||'plain';$('#cc').value=L.card;$('#tc').value=L.text;$('#hc').value=L.hl;$('#ft').value=L.ft}
+let OR=0,OFF=0;
+function refSize(){try{const m=S.imgs.find(isV)||S.imgs[0];if(!m)return null;const w=m.videoWidth||m.naturalWidth||m.width,h=m.videoHeight||m.naturalHeight||m.height;return w&&h?[w,h]:null}catch(e){return null}}
+function setSize(){let nw,nh;if($('#ar').value=='orig'){let[vw,vh]=refSize()||[720,1280];const sc=Math.min(1,3840/Math.max(vw,vh));vw=Math.round(vw*sc/2)*2;vh=Math.round(vh*sc/2)*2;const L=LY[$('#ly').value],hasCard=L.pos!='over'&&L.pos!='bars'&&L.pos!='full';nw=vw;nh=vh+(hasCard?Math.round(L.ch*nw/2)*2:0)+(L.bars?2*Math.round(nw*.16):0);OR=1}else{OR=0;nw=+$('#qs').value;nh=Math.round(nw*$('#ar').value)}
+ if(nw!=W||nh!=H||cv.width!=nw||cv.height!=nh){W=nw;H=nh;cv.width=W;cv.height=H}g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';$('#qs').disabled=OR==1}
+$('#ly').onchange=()=>{applyLayout();setSize();if(LY[$('#ly').value].bars)$('#cinf').scrollIntoView({block:'nearest',behavior:'smooth'})};$('#ar').onchange=$('#qs').onchange=setSize;$('#cc').addEventListener('input',()=>cust=1);
+const IDS=['fps','vg','ly','ft','cc','tc','hc','ar','qs','pf','fx','gl','fo','an','ts','fm','tt','tb','dur','au','wm','tx'];let rest=0;
+try{const o=JSON.parse(localStorage.getItem('rm_cfg')||'null');if(o){IDS.forEach(i=>{const e=$('#'+i);if(e&&i in o){if(e.type=='checkbox')e.checked=o[i];else e.value=o[i]}});cust=+o.cust||0;rest=1}}catch(e){}
+if(!rest)applyLayout();showF();setSize();DUR=+$('#dur').value;$('#dv').textContent=DUR;
+const sv0=()=>{const o={cust};IDS.forEach(i=>{const e=$('#'+i);o[i]=e.type=='checkbox'?e.checked:e.value});try{localStorage.setItem('rm_cfg',JSON.stringify(o))}catch(e){}};
+document.addEventListener('input',sv0);document.addEventListener('change',sv0);
+$('#dur').oninput=()=>{DUR=+$('#dur').value;$('#dv').textContent=DUR;S.t=Math.min(S.t,DUR)};
+document.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{$('#dur').value=b.dataset.d;$('#dur').oninput()});
+Promise.all(Object.values(FT).map(([f,w])=>document.fonts.load(`${w} 40px "${f}"`,'অআকখ').catch(()=>0)));
+
+/* images */
+const loadImg=f=>new Promise(r=>{if(f.type.startsWith('video/')){const v=document.createElement('video');v.muted=true;v.loop=true;v.playsInline=true;v.preload='auto';v._f=f;v.onloadeddata=()=>r(v);v.onerror=()=>r(null);v.src=URL.createObjectURL(f);return}const im=new Image();im.onload=()=>r(im);im.onerror=()=>r(null);im.src=URL.createObjectURL(f)});
+$('#vd').onclick=()=>{const vs=S.imgs.filter(isV);if(!vs.length){$('#st').textContent='আগে ভিডিও ক্লিপ যোগ করুন';return}const s=Math.round(vs.reduce((a,v)=>a+(v.duration||0)/(v._rate||1),0)+(S.imgs.length-vs.length)*3);$('#dur').value=cl(s,2,600);$('#dur').oninput();$('#st').textContent='✔ সময় সেট: '+DUR+' সেকেন্ড'};
+$('#im').onchange=async e=>{const first=!S.imgs.length,a=(await Promise.all([...e.target.files].map(loadImg))).filter(Boolean);a.forEach(i=>S.imgs.push(i));e.target.value='';
+ if(first&&a.length&&$('#ar').value!='orig'){$('#ar').value='orig';$('#vg').checked=false;$('#ar').dispatchEvent(new Event('change'));$('#vg').dispatchEvent(new Event('change',{bubbles:true}))}
+ thumbs();if(a.length){const r=refSize();$('#st').textContent='✔ অরিজিনাল মাপ: '+W+'×'+H+(r&&r[0]*r[1]>W*H*1.02?' (এনকোডারের সীমায় ছোট করা হয়েছে)':'')}};
+function thumbs(){setSize();const b=$('#th');b.textContent='';S.imgs.forEach((im,i)=>{const d=document.createElement('div');d.className='t';if(im.tagName=='VIDEO'){const v=document.createElement('video');v.src=im.src;v.muted=true;v.style.cssText='width:100%;height:100%;object-fit:cover;border-radius:8px';d.append(v)}else d.style.backgroundImage=`url(${im.src})`;const x=document.createElement('button');x.textContent='✖';x.setAttribute('aria-label','ছবি বাদ দিন');x.onclick=()=>{S.imgs.splice(i,1);S.ed=-1;thumbs();showEd()};d.append(x);if(im.tagName=='VIDEO'){const e=document.createElement('button');e.className='e';e.textContent='✎';e.setAttribute('aria-label','ক্লিপ এডিট');e.onclick=()=>{S.ed=i;showEd()};d.append(e);if((im._rate||1)!=1){const l=document.createElement('i');l.textContent=im._rate+'×';d.append(l)}}b.append(d)})}
+function showEd(){const p=$('#ed'),m=S.imgs[S.ed];if(!m||!isV(m)){p.style.display='none';return}p.style.display='block';$('#edt').textContent='✎ ক্লিপ '+(S.ed+1)+' এডিট';document.querySelectorAll('#edr button').forEach(b=>b.classList.toggle('on',+b.dataset.r==(m._rate||1)))}
+document.querySelectorAll('#edr button').forEach(b=>b.onclick=()=>{const m=S.imgs[S.ed];if(!m)return;m._rate=+b.dataset.r;thumbs();showEd()});
+$('#edc').onclick=()=>{S.ed=-1;showEd()};$('#edp').onclick=()=>{const n=S.imgs.length;if(S.ed<0||!n)return;S.t=S.ed*DUR/n;play(true)};
+
+/* saved texts */
+const QK='rm_quotes',qget=()=>{try{return JSON.parse(localStorage.getItem(QK)||'[]')}catch(e){return[]}};
+function qshow(){const b=$('#ql');b.textContent='';qget().forEach((q,i)=>{const r=document.createElement('div');r.className='q';const a=document.createElement('button');a.textContent=q.tx.replace(/\n/g,' / ');a.onclick=()=>{$('#tx').value=q.tx;$('#au').value=q.au};const x=document.createElement('button');x.textContent='✖';x.setAttribute('aria-label','মুছুন');x.onclick=()=>{const l=qget();l.splice(i,1);localStorage.setItem(QK,JSON.stringify(l));qshow()};r.append(a,x);b.append(r)})}
+$('#sv').onclick=()=>{const tx=$('#tx').value.trim();if(!tx)return;const l=qget().filter(q=>q.tx!=tx);l.unshift({tx,au:$('#au').value});try{localStorage.setItem(QK,JSON.stringify(l.slice(0,60)))}catch(e){}qshow();$('#st').textContent='✔ লেখা সেভ হয়েছে — নিচের তালিকা থেকে আবার নিতে পারবেন'};qshow();
+
+/* music */
+$('#mu').onchange=e=>{const f=e.target.files[0];if(!f)return;if(!au){au=new Audio();au.loop=true;if(!actx){actx=new (window.AudioContext||window.webkitAudioContext)();dest=actx.createMediaStreamDestination()}const s=actx.createMediaElementSource(au);gain=actx.createGain();s.connect(gain);gain.connect(actx.destination);gain.connect(dest)}au.src=URL.createObjectURL(f);S.music=true;S.mf=f;$('#st').textContent='🎵 মিউজিক যোগ হয়েছে'};
+const sync=()=>{if(!S.music)return;actx.resume();au.currentTime=(+$('#ms').value||0)+S.t;au.play().catch(()=>{})};
+
+/* text size controls */
+const TZ=()=>cl((+$('#tz').value||100)/100,.4,2),AZ=()=>cl((+$('#az').value||100)/100,.4,2.2),bn=n=>String(n).replace(/\d/g,d=>'০১২৩৪৫৬৭৮৯'[d]),SZK='reels_text_size';
+function szUpd(save){$('#tzv').textContent=bn($('#tz').value);$('#azv').textContent=bn($('#az').value);if(save){try{localStorage.setItem(SZK,JSON.stringify([+$('#tz').value,+$('#az').value]))}catch(e){}}}
+$('#tz').oninput=$('#az').oninput=()=>szUpd(1);
+$('#tzm').onclick=()=>{$('#tz').value=Math.max(40,+$('#tz').value-5);szUpd(1)};
+$('#tzp').onclick=()=>{$('#tz').value=Math.min(200,+$('#tz').value+5);szUpd(1)};
+$('#tzr').onclick=()=>{$('#tz').value=100;$('#az').value=100;szUpd(1)};
+try{const z=JSON.parse(localStorage.getItem(SZK)||'null');if(z){$('#tz').value=z[0];$('#az').value=z[1]}}catch(e){}szUpd(0);
+/* text layout */
+const parse=(id='#tx')=>$(id).value.split('\n').map(s=>s.trim()).filter(Boolean).map(s=>s[0]=='*'?{t:s.replace(/^\*+\s*/,''),h:1}:{t:s,h:0});
+const lcm=new Map();
+function lay(lines,fam,fw,maxW,maxH,s0){const k=JSON.stringify([lines,fam,fw,maxW|0,maxH|0,s0|0]);if(lcm.has(k))return lcm.get(k);let v;for(let size=Math.round(s0);size>=14;size-=2){const rows=[];lines.forEach(L=>{g.font=`${L.h?700:fw} ${size}px "${fam}"`;const sp=g.measureText(' ').width;let cur=[],cw=0;L.t.split(/\s+/).filter(Boolean).forEach(w=>{const m=g.measureText(w).width,x=cur.length?cw+sp:0;if(cur.length&&x+m>maxW){rows.push({w:cw,h:L.h,words:cur});cur=[{t:w,m,x:0}];cw=m}else{cur.push({t:w,m,x});cw=x+m}});if(cur.length)rows.push({w:cw,h:L.h,words:cur})});v={rows,size,lh:size*1.5};if(rows.length*size*1.5<=maxH)break}if(lcm.size>30)lcm.clear();lcm.set(k,v);return v}
+function drawText(t,x,y,w,h,al,shadow,src){const lines=parse(src);if(!lines.length)return;const[fam,fw]=FT[$('#ft').value],col=$('#tc').value,hl=$('#hc').value,ts=$('#ts').value,q=lay(lines,fam,fw,w,h*Math.max(1,TZ()),W*.075*TZ()),mode=$('#an').value,nR=q.rows.length;let nW=0,nC=0;q.rows.forEach(r=>r.words.forEach(o=>{o.c0=nC;nC+=o.t.length;nW++}));
+ const RD=Math.min(DUR*.6,3.5),p=mode=='none'?1:cl((t-.3)/RD),top=y+(h-nR*q.lh)/2;let gi=0;g.save();g.textBaseline='middle';
+ if(shadow){g.shadowColor='rgba(0,0,0,.75)';g.shadowBlur=q.size*.25}
+ q.rows.forEach((r,ri)=>{const bx=al=='left'?x:al=='center'?x+(w-r.w)/2:x+w-r.w;g.font=`${r.h?700:fw} ${q.size}px "${fam}"`;g.fillStyle=r.h?hl:col;
+  r.words.forEach(o=>{let a=1,dy=0,dx=0,sc=1,s=o.t;if(mode=='fade')a=p;else if(mode=='rise'){a=p;dy=(1-p)*q.size*.8}else if(mode=='line'){a=cl(p*nR-ri);dy=(1-a)*q.size*.5}else if(mode=='word'){a=cl(p*nW-gi);dy=(1-a)*q.size*.4}else if(mode=='slide'){a=cl(p*nW-gi);dx=(1-a)*-q.size*1.2}else if(mode=='zoom'){a=cl(p*nW-gi);sc=1.6-.6*a}else if(mode=='type')s=o.t.slice(0,Math.max(0,Math.floor(p*nC)-o.c0));gi++;
+   if(a>0&&s){g.globalAlpha=a;const xx=bx+o.x+dx,yy=top+ri*q.lh+q.lh/2+dy;if(sc!=1){g.save();g.translate(xx+o.m/2,yy);g.scale(sc,sc);g.translate(-xx-o.m/2,-yy);put(s,xx,yy,o.m,r.h,q.size,col,hl,ts);g.restore()}else put(s,xx,yy,o.m,r.h,q.size,col,hl,ts)}})});
+ g.restore();return RD}
+function drawAuthor(t,x,y,w,al,col,size,sig,RD){const a=$('#au').value.trim();if(!a)return;const name=/^[-—–]/.test(a)?a:'— '+a,mode=$('#an').value,p=mode=='none'?1:cl((t-.3-RD)/.7);g.save();g.globalAlpha=p;g.fillStyle=col;g.textBaseline='middle';g.font=sig?`400 ${size*1.7}px Galada`:`500 ${size}px "Hind Siliguri"`;g.textAlign=al=='left'?'right':al;const px=al=='center'&&!sig?x+w/2:x+w;g.fillText(name,al=='center'&&!sig?x+w/2:px,y+(1-p)*size*.5);g.restore()}
+
+function put(s,x,y,m,h,z,col,hl,ts){g.save();let f=h?hl:col;
+ if(ts=='marker'){g.fillStyle=h?'#e11d48':hl;g.fillRect(x-z*.14,y-z*.56,m+z*.28,z*1.1);f=h?'#fff':col}
+ else if(ts=='gold'&&!h){const k=g.createLinearGradient(0,y-z/2,0,y+z/2);k.addColorStop(0,'#fff3c4');k.addColorStop(.55,'#f0c15a');k.addColorStop(1,'#b8862b');f=k;g.shadowColor='rgba(0,0,0,.45)';g.shadowBlur=z*.1}
+ else if(ts=='glow'){g.shadowColor=h?hl:col;g.shadowBlur=z*.45}
+ else if(ts=='hlout'){if(h){g.lineJoin='round';g.lineWidth=z*.17;g.strokeStyle='#3b2a00';g.strokeText(s,x,y)}}
+ else if(ts=='outline'){g.lineJoin='round';g.lineWidth=z*.14;g.strokeStyle='rgba(0,0,0,.85)';g.strokeText(s,x,y)}
+ g.fillStyle=f;g.fillText(s,x,y);g.restore()}
+const P=Array.from({length:70},()=>({x:Math.random(),y:Math.random(),s:.4+Math.random(),v:.3+Math.random()*.7,p:Math.random()*6}));
+function fx(t,x,y,w,h){const m=$('#fx').value;if(m=='none')return;g.save();g.beginPath();g.rect(x,y,w,h);g.clip();
+ if(m=='rain'){g.strokeStyle='rgba(200,220,255,.35)';g.lineWidth=Math.max(1,W/700);g.beginPath();P.forEach(o=>{const yy=((o.y+t*o.v*1.4)%1)*h,xx=(((o.x-t*.05)%1)+1)%1*w;g.moveTo(x+xx,y+yy);g.lineTo(x+xx-h*.012,y+yy+h*.05*o.s)});g.stroke()}
+ else P.forEach(o=>{const d=m=='dust'?-1:1,yy=(((o.y+d*t*o.v*.05)%1)+1)%1*h,xx=(((o.x+Math.sin(t*.6+o.p)*.03)%1)+1)%1*w,r=W*.004*o.s*(m=='petal'?2.2:1);g.globalAlpha=.25+.45*Math.abs(Math.sin(t+o.p));g.fillStyle=m=='petal'?'#ffb3c7':m=='dust'?'#ffe9b0':'#fff';g.beginPath();if(m=='petal')g.ellipse(x+xx,y+yy,r*1.6,r,t+o.p,0,7);else g.arc(x+xx,y+yy,r,0,7);g.fill()});g.restore()}
+/* photo */
+const isV=m=>m.tagName=='VIDEO';
+function dImg(im,x,y,w,h,z,a){const iw=im.videoWidth||im.width,ih=im.videoHeight||im.height;if(!iw)return;const s=Math.max(w/iw,h/ih)*z;g.globalAlpha=a;g.drawImage(im,x+(w-iw*s)/2,y+(h-ih*s)/2,iw*s,ih*s);g.globalAlpha=1}
+function vsnd(v){if(!v._g){if(!actx){actx=new (window.AudioContext||window.webkitAudioContext)();dest=actx.createMediaStreamDestination()}v.muted=false;const s=actx.createMediaElementSource(v);v._g=actx.createGain();s.connect(v._g);v._g.connect(actx.destination);v._g.connect(dest)}v._g.gain.value=$('#vs').checked?1:0}
+function vplay(v,lt,on){if(OFF)return;if(!on){if(!v.paused)v.pause();return}if($('#vs').checked||v._g){try{vsnd(v)}catch(e){}}const ts=v._ts||0,te=(v._te&&v._te>ts)?v._te:(v.duration||1),d=Math.max(.1,te-ts),r=v._rate||1,want=ts+((lt*r)%d);if(S.playing||S.rec){if(v.playbackRate!=r)v.playbackRate=r;if(v.paused||Math.abs(v.currentTime-want)>.6){v.currentTime=want;v.play().catch(()=>{})}}else{if(!v.paused)v.pause();if(Math.abs(v.currentTime-want)>.05)v.currentTime=want}}
+function photo(x,y,w,h,t){g.save();g.beginPath();g.rect(x,y,w,h);g.clip();const n=S.imgs.length;
+ if(!n){g.fillStyle='#1b1b24';g.fillRect(x,y,w,h);g.fillStyle='#8b8fa3';g.textAlign='center';g.font=`600 ${w*.05}px "Hind Siliguri"`;g.fillText('📷 ছবি দিন',x+w/2,y+h/2)}
+ else{const seg=DUR/n,i=Math.min(n-1,Math.floor(t/seg)),lt=t-i*seg,X=.7;S.imgs.forEach((m,k)=>{if(isV(m)){if(k==i)vplay(m,lt,true);else if(!(k==i-1&&lt<X))vplay(m,0,false)}});const cm=S.imgs[i],pm=S.imgs[i-1];g.filter=$('#pf').value||'none';if(i>0&&lt<X)dImg(pm,x,y,w,h,isV(pm)?1:1.1,1);dImg(cm,x,y,w,h,isV(cm)?1:1+.1*(i%2?1-lt/seg:lt/seg),i>0?cl(lt/X):1);g.filter='none'}
+ const v=g.createRadialGradient(x+w/2,y+h/2,Math.min(w,h)*.35,x+w/2,y+h/2,Math.max(w,h)*.75);v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,'rgba(0,0,0,.45)');if($('#vg').checked){g.fillStyle=v;g.fillRect(x,y,w,h)}if($('#gl').checked){g.save();g.globalAlpha=.08;g.fillStyle=gp();g.translate(Math.random()*200|0,Math.random()*200|0);g.fillRect(-200,-200,w+200,h+200);g.restore()}g.restore()}
+
+/* stickers */
+const EM=['😍','😢','😭','💔','🥀','❤️','🔥','✨','🌹','🕊️','🎀','🌙','⭐','🥺','💫','🌸','🦋','☁️','💌','🖤','😎','👑','🎵','💖','🍂','🌧️','😔','🤍'];
+EM.forEach(c=>{const b=document.createElement('button');b.textContent=c;b.onclick=()=>addSt(c);$('#sp').append(b)});
+const stAny=()=>cv.classList.toggle('cv-st',S.st.length>0||S.cov.length>0);
+function addSt(c,rnd){const o={c,x:.5,y:.5,s:.16,a:0,t0:0,t1:0,p:Math.random()*6};if(rnd){o.x=.15+Math.random()*.7;o.y=.12+Math.random()*.76;o.s=.1+Math.random()*.13;o.a=(Math.random()*50-25)*Math.PI/180}else{o.x=.25+Math.random()*.5;o.y=.3+Math.random()*.4}S.st.push(o);S.sel=S.st.length-1;S.csel=-1;cCtl();stAny();stCtl()}
+$('#sr').onclick=()=>addSt(EM[Math.random()*EM.length|0],1);
+$('#sx').onclick=()=>{S.st=[];S.sel=-1;stAny();stCtl()};
+$('#sf').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;const im=await loadImg(f);if(im)addSt(im)};
+function stCtl(){const o=S.st[S.sel];$('#sc').style.display=o?'block':'none';if(!o)return;$('#ss').value=Math.round(o.s*100);$('#sa').value=Math.round(o.a*180/Math.PI);$('#s0').value=o.t0;$('#s1').value=o.t1}
+$('#ss').oninput=()=>{const o=S.st[S.sel];if(o)o.s=$('#ss').value/100};
+$('#sa').oninput=()=>{const o=S.st[S.sel];if(o)o.a=$('#sa').value*Math.PI/180};
+$('#s0').oninput=()=>{const o=S.st[S.sel];if(o)o.t0=Math.max(0,+$('#s0').value||0)};
+$('#s1').oninput=()=>{const o=S.st[S.sel];if(o)o.t1=Math.max(0,+$('#s1').value||0)};
+$('#sd').onclick=()=>{if(S.sel<0)return;S.st.splice(S.sel,1);S.sel=-1;stAny();stCtl()};
+function stBox(o){const im=typeof o.c!='string',px=o.s*W;let w=px,h=px;if(im){const iw=o.c.videoWidth||o.c.width||1,ih=o.c.videoHeight||o.c.height||1;h=px*ih/iw}return[w,h]}
+let drag=null;const cpos=e=>{const r=cv.getBoundingClientRect();return[(e.clientX-r.left)/r.width*W,(e.clientY-r.top)/r.height*H]};
+const PR={x:0,y:0,w:720,h:1280},TMP=document.createElement('canvas'),SM=document.createElement('canvas');
+function addCov(k){const w=.26,h=W*.1/H,m=.02,mh=m*W/H,top=PR.y/H,bot=(PR.y+PR.h)/H;const x=k[1]=='l'?m:k[1]=='r'?1-w-m:(1-w)/2,y=k[0]=='t'?top+mh:k[0]=='b'?bot-h-mh:(top+bot)/2-h/2;
+ S.cov.push({x,y,w,h,mode:'blur',col:'#000000',txt:'',t0:0,t1:0});S.csel=S.cov.length-1;S.sel=-1;stCtl();cCtl();stAny()}
+document.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>addCov(b.dataset.k=='c'?'cc':b.dataset.k));
+$('#cx').onclick=()=>{S.cov=[];S.csel=-1;cCtl();stAny()};
+function cCtl(){const o=S.cov[S.csel];$('#cc2').style.display=o?'block':'none';if(!o)return;$('#cm').value=o.mode;$('#cmx').style.display=o.mode=='solid'||o.mode=='label'?'block':'none';$('#ck').value=o.col;$('#ct').value=o.txt;$('#cw').value=Math.round(o.w*100);$('#ch2').value=Math.round(o.h*100);$('#c0').value=o.t0;$('#c1').value=o.t1}
+$('#cm').onchange=()=>{const o=S.cov[S.csel];if(o){o.mode=$('#cm').value;cCtl()}};
+$('#ck').oninput=()=>{const o=S.cov[S.csel];if(o)o.col=$('#ck').value};
+$('#ct').oninput=()=>{const o=S.cov[S.csel];if(o)o.txt=$('#ct').value};
+$('#cw').oninput=()=>{const o=S.cov[S.csel];if(o){o.w=$('#cw').value/100;o.x=cl(o.x,0,1-o.w)}};
+$('#ch2').oninput=()=>{const o=S.cov[S.csel];if(o){o.h=$('#ch2').value/100;o.y=cl(o.y,0,1-o.h)}};
+$('#c0').oninput=()=>{const o=S.cov[S.csel];if(o)o.t0=Math.max(0,+$('#c0').value||0)};
+$('#c1').oninput=()=>{const o=S.cov[S.csel];if(o)o.t1=Math.max(0,+$('#c1').value||0)};
+$('#cd').onclick=()=>{if(S.csel<0)return;S.cov.splice(S.csel,1);S.csel=-1;cCtl();stAny()};
+const covOut=(o,t)=>t<o.t0||(o.t1>0&&t>=o.t1);
+function drawCov(t){S.cov.forEach(o=>{if(covOut(o,t))return;const x=o.x*W,y=o.y*H,w=Math.max(4,o.w*W),h=Math.max(4,o.h*H);
+ if(o.mode=='solid'||o.mode=='label'){g.save();g.fillStyle=o.col;g.beginPath();g.roundRect?g.roundRect(x,y,w,h,Math.min(w,h)*.18):g.rect(x,y,w,h);g.fill();
+  if(o.mode=='label'){const s=(o.txt||$('#wm').value||'আপনার পেজ').trim(),c=o.col.replace('#',''),lum=(parseInt(c.slice(0,2),16)*.3+parseInt(c.slice(2,4),16)*.59+parseInt(c.slice(4,6),16)*.11);let z=h*.6;g.font=`700 ${z}px "Hind Siliguri"`;const m=g.measureText(s).width;if(m>w*.9)z*=w*.9/m;g.font=`700 ${z}px "Hind Siliguri"`;g.fillStyle=lum>150?'#111':'#fff';g.textAlign='center';g.textBaseline='middle';g.fillText(s,x+w/2,y+h/2)}g.restore();return}
+ const cw=Math.ceil(w),chh=Math.ceil(h);TMP.width=cw;TMP.height=chh;const q=TMP.getContext('2d');
+ if(o.mode=='patch'){let sy=y-h;if(sy<PR.y)sy=Math.min(y+h,H-h);sy=cl(sy,0,H-h);q.save();q.translate(0,chh);q.scale(1,-1);q.drawImage(cv,x,sy,w,h,0,0,cw,chh);q.restore();q.filter=`blur(${Math.max(1,h*.04)}px)`;q.globalCompositeOperation='copy';q.drawImage(TMP,0,0);q.filter='none'}
+ else{const bs=W*(o.mode=='mosaic'?.022:.03),bw=Math.max(2,Math.round(w/bs)),bh=Math.max(2,Math.round(h/bs));SM.width=bw;SM.height=bh;SM.getContext('2d').drawImage(cv,x,y,w,h,0,0,bw,bh);q.imageSmoothingEnabled=o.mode!='mosaic';q.drawImage(SM,0,0,bw,bh,0,0,cw,chh)}
+ const f=Math.min(cw,chh)*.16;q.globalCompositeOperation='destination-in';q.filter=`blur(${f*.6}px)`;q.fillStyle='#000';q.fillRect(f,f,cw-2*f,chh-2*f);q.filter='none';q.globalCompositeOperation='source-over';
+ g.drawImage(TMP,x,y)})}
+function drawCovUI(t){const live=S.playing||S.rec;S.cov.forEach((o,i)=>{if(i!=S.csel||S.rec||OFF)return;const x=o.x*W,y=o.y*H,w=o.w*W,h=o.h*H;g.save();g.globalAlpha=covOut(o,t)&&!live?.5:1;g.setLineDash([W*.012,W*.012]);g.lineWidth=Math.max(2,W*.004);g.strokeStyle='#ffd27a';g.strokeRect(x,y,w,h);g.setLineDash([]);g.fillStyle='#ffd27a';const r=W*.03;g.fillRect(x+w-r/2,y+h-r/2,r,r);g.restore()})}
+cv.addEventListener('pointerdown',e=>{const[px,py]=cpos(e);let hit=-1;
+ const sc=S.cov[S.csel];if(sc){const r=W*.04;if(Math.abs(px-(sc.x+sc.w)*W)<=r&&Math.abs(py-(sc.y+sc.h)*H)<=r){drag={k:'rs'};cv.setPointerCapture(e.pointerId);e.preventDefault();return}}
+ for(let i=S.st.length-1;i>=0;i--){const o=S.st[i],[w,h]=stBox(o),r=Math.max(w,h)*.6;if(Math.abs(px-o.x*W)<=r&&Math.abs(py-o.y*H)<=r){hit=i;break}}
+ if(hit>=0){S.sel=hit;S.csel=-1;stCtl();cCtl();const o=S.st[hit];drag={k:'st',dx:px-o.x*W,dy:py-o.y*H};cv.setPointerCapture(e.pointerId);e.preventDefault();return}
+ let ch=-1;for(let i=S.cov.length-1;i>=0;i--){const o=S.cov[i];if(px>=o.x*W&&px<=(o.x+o.w)*W&&py>=o.y*H&&py<=(o.y+o.h)*H){ch=i;break}}
+ S.sel=-1;S.csel=ch;stCtl();cCtl();if(ch>=0){const o=S.cov[ch];drag={k:'cv',dx:px-o.x*W,dy:py-o.y*H};cv.setPointerCapture(e.pointerId);e.preventDefault()}});
+cv.addEventListener('pointermove',e=>{if(!drag)return;const[px,py]=cpos(e);if(drag.k=='st'){const o=S.st[S.sel];if(o){o.x=cl((px-drag.dx)/W);o.y=cl((py-drag.dy)/H)}}
+ else{const o=S.cov[S.csel];if(!o)return;if(drag.k=='cv'){o.x=cl((px-drag.dx)/W,0,1-o.w);o.y=cl((py-drag.dy)/H,0,1-o.h)}else{o.w=cl(px/W-o.x,.03,1-o.x);o.h=cl(py/H-o.y,.01,1-o.y);$('#cw').value=Math.round(o.w*100);$('#ch2').value=Math.round(o.h*100)}}});
+cv.addEventListener('pointerup',()=>{drag=null});cv.addEventListener('pointercancel',()=>{drag=null});
+function drawSt(t){if(!S.st.length)return;const live=S.playing||S.rec||OFF;S.st.forEach((o,i)=>{const sel=i==S.sel&&!S.rec&&!OFF,out=t<o.t0||(o.t1>0&&t>=o.t1);if(out&&!(sel&&!live))return;
+ const q=live?cl((t-o.t0)/.35):1,sc=q<1?1+2.7*Math.pow(q-1,3)+1.7*Math.pow(q-1,2):1,bob=live?Math.sin(t*3+o.p)*W*.006:0,wob=live?Math.sin(t*2+o.p)*.05:0,[w,h]=stBox(o);
+ g.save();g.globalAlpha=out?.35:1;g.translate(o.x*W,o.y*H+bob);g.rotate(o.a+wob);g.scale(sc,sc);
+ if(typeof o.c=='string'){g.font=`${w}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;g.textAlign='center';g.textBaseline='middle';g.fillStyle='#fff';g.fillText(o.c,0,0)}else g.drawImage(o.c,-w/2,-h/2,w,h);
+ if(sel){g.setLineDash([W*.012,W*.012]);g.lineWidth=Math.max(2,W*.004);g.strokeStyle='#ffd27a';g.strokeRect(-w*.6,-h*.6,w*1.2,h*1.2)}
+ g.restore()})}
+/* frame */
+function draw(t){const L=LY[$('#ly').value],full=L.pos=='full',hasCard=L.pos!='over'&&L.pos!='bars'&&!full;let ch=hasCard?L.ch*W:0,ph=full?H:L.ph*W;let k=full?1:Math.min(1,H*.96/(ch+ph));if(OR){k=1;ph=H-ch-(L.bars?2*Math.round(W*.16):0)}ch*=k;ph*=k;const y0=(H-ch-ph)/2;let cy=y0,py=y0;if(L.pos=='top')py=y0+ch;else if(L.pos=='bottom')cy=y0+ph;
+ g.fillStyle='#000';g.fillRect(0,0,W,H);g.textAlign='left';g.globalAlpha=1;photo(0,py,W,ph,t);fx(t,0,py,W,ph);PR.x=0;PR.y=py;PR.w=W;PR.h=ph;g.globalAlpha=1;drawCov(t);
+ const wm=$('#wm').value.trim();if(wm){g.save();const cn=L.fade;g.font=`600 ${W*(cn?.05:.032)}px "Hind Siliguri"`;g.fillStyle=cn?'#fff':'rgba(255,255,255,.85)';g.shadowColor='rgba(0,0,0,.8)';g.shadowBlur=8;g.textBaseline='alphabetic';g.textAlign=cn?'center':'left';g.fillText(wm,cn?W/2:W*.04,cn?py+ph*.9:py+ph-W*.035);g.restore()}
+ const col=$('#tc').value,px=W*.09,aS=W*.045*AZ(),aH=$('#au').value.trim()?W*.1*Math.max(1,AZ()):0;
+ if(hasCard){let f=$('#cc').value;if(L.c2&&!cust){f=g.createLinearGradient(0,cy,W*.5,cy+ch);f.addColorStop(0,L.card);f.addColorStop(1,L.c2)}g.fillStyle=f;g.fillRect(0,cy,W,ch);if(L.qm){g.save();g.globalAlpha=.25;g.fillStyle=$('#hc').value;g.font=`700 ${W*.3}px Georgia,serif`;g.textBaseline='alphabetic';g.fillText('\u201C',W*.04,cy+W*.24);g.restore()}if(L.gr){g.save();g.globalAlpha=L.gr;g.fillStyle=gp();g.fillRect(0,cy,W,ch);g.restore()}
+  const RD=drawText(t,px,cy+ch*.07,W-px*2,ch*.86-aH,L.al,false)||0;drawAuthor(t,px,cy+ch*.93-aH/2,W-px*2,L.sig?'right':L.al,col,aS,L.sig,RD)}
+ else if(L.fade){const gr=g.createLinearGradient(0,py,0,py+ph*.62);gr.addColorStop(0,'#fff');gr.addColorStop(.55,'rgba(255,255,255,.95)');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(0,py,W,ph*.62);const RD=drawText(t,px,py+ph*.06,W-px*2,ph*.4,'center',false)||0;drawAuthor(t,px,py+ph*.5,W-px*2,'center',col,aS,false,RD)}
+ else if(L.bars){const sg=g.createLinearGradient(0,py+ph*.5,0,py+ph);sg.addColorStop(0,'rgba(0,0,0,0)');sg.addColorStop(1,'rgba(0,0,0,.65)');g.fillStyle=sg;g.fillRect(0,py+ph*.5,W,ph*.5);const bh=H-py-ph;drawText(t,px,py+ph*.58,W-px*2,ph*.36,'center',true);drawText(t,px,py*.12,W-px*2,py*.76,'center',false,'#tt');drawText(t,px,py+ph+bh*.12,W-px*2,bh*.76,'center',false,'#tb')}
+ else{const gr=g.createLinearGradient(0,py+ph*.3,0,py+ph);gr.addColorStop(0,'rgba(0,0,0,0)');gr.addColorStop(1,'rgba(0,0,0,.7)');g.fillStyle=gr;g.fillRect(0,py+ph*.3,W,ph*.7);
+  const RD=drawText(t,px,py+ph*(full?.25:.42),W-px*2,ph*(full?.5:.42)-aH,'center',true)||0;drawAuthor(t,px,py+ph*(full?.8:.9)-aH/2,W-px*2,'center',col,aS,false,RD)}
+ drawSt(t);drawCovUI(t);
+ if($('#fo').checked){const a=1-Math.min(cl(t/.4),cl((DUR-t)/.5));if(a>0){g.fillStyle=`rgba(0,0,0,${a})`;g.fillRect(0,0,W,H)}}}
+
+/* player */
+let last=performance.now();
+function tick(now){const dt=Math.min(.1,(now-last)/1000);last=now;
+ if(S.rec){S.t=(performance.now()-S.t0)/1000;if(S.t<DUR){$('#st').textContent='⏺ রেকর্ড হচ্ছে ('+S.t.toFixed(1)+' / '+DUR+' সেকেন্ড)… ট্যাব খোলা রাখুন'}if(S.t>=DUR&&!S.recStopping){S.recStopping=true;S.t=DUR;if(S.recTimer){clearInterval(S.recTimer);S.recTimer=null}setTimeout(()=>{S.rec=false;S.recStopping=false;try{recorder.requestData()}catch(e){}try{if(recorder.state!=='inactive')recorder.stop()}catch(e){}},260)}}else if(S.playing){S.t+=dt;if(S.t>=DUR){S.t=0;sync()}}
+ if(gain)gain.gain.value=(+$('#mv').value/100)*cl((DUR-S.t)/1.5);
+ if(!OFF){draw(S.t);if(S.rec&&S.vtrack&&S.vtrack.requestFrame)try{S.vtrack.requestFrame()}catch(e){}}$('#sk').value=Math.round(S.t/DUR*1000);requestAnimationFrame(tick)}
+requestAnimationFrame(tick);
+function play(v){S.playing=v;$('#pl').textContent=v?'⏸ থামান':'▶ চালান';if(v)sync();else if(au)au.pause()}
+$('#pl').onclick=()=>play(!S.playing);
+$('#sk').oninput=()=>{S.t=$('#sk').value/1000*DUR;if(S.playing)sync()};
+
+/* AI image prompt */
+const STYLE_B90=`STRICT VISUAL REFERENCE — 1990s HEARTBREAK PHOTOGRAPHY
+
+Use the uploaded reference image as the primary visual style reference for every generated image.
+
+Create ultra-photorealistic scenes that look like genuine photographs captured in the 1990s using an actual analog film camera.
+
+Visual requirements:
+
+- Authentic 1990s Bengali/South Asian atmosphere.
+- Pure black and white photography with rich grayscale tones.
+- Real human faces, natural skin texture and realistic body proportions.
+- Emotionally expressive characters with subtle sadness, heartbreak and loneliness.
+- Authentic vintage clothing, traditional architecture and period-appropriate surroundings.
+- Natural lighting, realistic shadows and cinematic composition.
+- Organic 35mm film grain, subtle film imperfections and authentic analog photographic texture.
+- Realistic depth of field and natural camera perspective.
+
+CRITICAL — AVOID AI-GENERATED LOOK:
+
+The image must NOT look like digital AI artwork, CGI, 3D rendering, illustration, painting or artificial studio photography.
+
+Avoid plastic skin, overly smooth faces, artificial facial expressions, excessive sharpening, unrealistic lighting, exaggerated cinematic effects and artificial-looking details.
+
+The final result should resemble a genuine, emotionally powerful, forgotten photograph from 1990s Bangladesh.
+
+Always prioritize photographic realism over artistic beauty.
+
+The scene must be determined by the user's supplied text, while maintaining this exact visual identity.`;
+$('#pc').onclick=async()=>{let ok=false;try{await navigator.clipboard.writeText(STYLE_B90);ok=true}catch(e){const t=document.createElement('textarea');t.value=STYLE_B90;t.style.cssText='position:fixed;top:0;left:0;opacity:0';document.body.appendChild(t);t.select();try{ok=document.execCommand('copy')}catch(e2){}t.remove()}
+ const b=$('#pc');b.textContent=ok?'✔ ফর্ম কপি হয়েছে':'⚠ কপি হয়নি — Chrome-এ খুলুন';setTimeout(()=>b.textContent='📋 ফর্ম কপি করুন',2000)};
+/* export */
+const mts={mp4:['video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4'],webm:['video/webm;codecs=vp8,opus','video/webm;codecs=vp9,opus','video/webm']};
+const pick=f=>window.MediaRecorder&&mts[f].find(m=>MediaRecorder.isTypeSupported(m));
+let lastReelBlob=null,lastReelName='',lastReelUrl='';
+function deliverReel(b,name){
+ if(lastReelUrl)try{URL.revokeObjectURL(lastReelUrl)}catch(e){}
+ lastReelBlob=b;lastReelName=name;lastReelUrl=URL.createObjectURL(b);
+ $('#vp').src=lastReelUrl;$('#vp').style.display='block';
+ const row=$('#dl-row'),dl=$('#dl-btn'),sh=$('#sh-btn');
+ if(row&&dl){
+  row.style.display='flex';dl.href=lastReelUrl;dl.download=name;
+  dl.onclick=async ev=>{
+   if(window.showSaveFilePicker){
+    try{ev.preventDefault();const h=await window.showSaveFilePicker({suggestedName:name});const w=await h.createWritable();await w.write(b);await w.close();$('#st').textContent='✔ ফাইল সেভ হয়েছে: '+name;return}catch(e){if(e&&e.name==='AbortError')return}
+   }
+  };
+  if(sh){
+   const canSh=!!(navigator.share&&navigator.canShare);
+   sh.style.display=canSh?'inline-block':'none';
+   sh.onclick=async()=>{try{const f=new File([b],name,{type:b.type||'video/mp4'});if(navigator.canShare({files:[f]}))await navigator.share({files:[f],title:name})}catch(e){}};
+  }
+ }
+ const a=document.createElement('a');a.href=lastReelUrl;a.download=name;a.style.display='none';document.body.appendChild(a);a.click();setTimeout(()=>a.remove(),3000);
+}
+async function exportV(fmt){const f=fmt||$('#fm').value,mt=f=='auto'?(pick('mp4')||pick('webm')):(pick(f)||pick('webm')||pick('mp4'));
+ if(!mt){alert('এই ব্রাউজারে ভিডিও রেকর্ড হয় না — Chrome ব্যবহার করুন।');return}
+ play(false);S.t=0;S.recStopping=false;if(S.recTimer){clearInterval(S.recTimer);S.recTimer=null}
+ await document.fonts.ready;
+ const fps=+$('#fps').value||30;
+ const st=cv.captureStream(fps);S.vtrack=null;
+ const vsOn=$('#vs').checked&&S.imgs.some(isV);if(vsOn){if(!actx){actx=new (window.AudioContext||window.webkitAudioContext)();dest=actx.createMediaStreamDestination()}S.imgs.filter(isV).forEach(v=>{try{vsnd(v)}catch(e){}})}
+ if(S.music||vsOn){await actx.resume();st.addTrack(dest.stream.getAudioTracks()[0]);if(S.music)sync()}
+ const ch=[];let bad=false;const bps=Math.min(12e6,Math.max(3e6,Math.round(W*H*fps*.14)));
+ recorder=new MediaRecorder(st,{mimeType:mt,videoBitsPerSecond:bps});
+ recorder.ondataavailable=e=>{if(e.data&&e.data.size)ch.push(e.data)};recorder.onerror=()=>{bad=true};
+ recorder.onstop=()=>{if(au)au.pause();if(S.recTimer){clearInterval(S.recTimer);S.recTimer=null}S.vtrack=null;const early=S.rec||bad;S.rec=false;S.recStopping=false;$('#ex').disabled=false;
+  if(early&&!mt.includes('webm')&&pick('webm')){$('#st').textContent='⚠ MP4 রেকর্ড মাঝপথে থেমে গেছে — নিজে থেকে WebM-এ আবার চেষ্টা হচ্ছে…';exportV('webm');return}
+  const b=new Blob(ch,{type:mt.split(';')[0]}),name='reel_'+Date.now()+(mt.includes('mp4')?'.mp4':'.webm');
+  deliverReel(b,name);
+  $('#st').textContent=(early?'⚠ ভিডিও পুরো সময় রেকর্ড হয়নি — "সেরা কোয়ালিটি ভিডিও (MP4)" বাটন ব্যবহার করুন। ':'✔ ভিডিও তৈরি হয়েছে ')+'('+(b.size/1e6).toFixed(1)+' MB, '+DUR+'s, '+mt.split(';')[0].split('/')[1].toUpperCase()+') — নিচের "ভিডিও ডাউনলোড করুন" বাটনে ক্লিক করুন'};
+ draw(0);if(S.vtrack)try{S.vtrack.requestFrame()}catch(e){}
+ S.rec=true;S.t0=performance.now();$('#ex').disabled=true;recorder.start(500);
+ S.recTimer=null;
+ $('#st').textContent='⏺ রেকর্ড হচ্ছে (0.0 / '+DUR+' সেকেন্ড)… এই ট্যাব খোলা রাখুন'}
+$('#ex').onclick=()=>exportV();
+/* ===== high quality export (WebCodecs) ===== */
+function muxMP4(o){
+ const te=s=>[...s].map(c=>c.charCodeAt(0)),u32=v=>[v>>>24&255,v>>>16&255,v>>>8&255,v&255],u16=v=>[v>>8&255,v&255];
+ const cat=(...a)=>{a=a.map(x=>x instanceof Uint8Array?x:Uint8Array.from(x));let n=0;a.forEach(x=>n+=x.length);const r=new Uint8Array(n);let p=0;a.forEach(x=>{r.set(x,p);p+=x.length});return r};
+ const box=(ty,...c)=>{const b=cat(...c);return cat([...u32(b.length+8),...te(ty)],b)};
+ const full=(ty,ver,fl,...c)=>box(ty,[ver,fl>>16&255,fl>>8&255,fl&255],...c);
+ const MAT=[...u32(65536),0,0,0,0,0,0,0,0,...u32(65536),0,0,0,0,0,0,0,0,...u32(0x40000000)];
+ const Z=n=>new Array(n).fill(0);
+ const rle=a=>{const r=[];a.forEach(v=>{if(r.length&&r[r.length-1][1]===v)r[r.length-1][0]++;else r.push([1,v])});return r};
+ const tracks=[];
+ if(o.video){const v=o.video,ts=v.fps*1000;
+  tracks.push({id:1,kind:'v',ts,dur:Math.round(v.samples.length/v.fps*1000),samples:v.samples,deltas:v.samples.map(()=>1000),per:v.fps,
+   hdlr:'vide',media:full('vmhd',0,1,Z(8)),w:v.w,h:v.h,
+   entry:box('avc1',Z(6),u16(1),Z(16),u16(v.w),u16(v.h),u32(0x480000),u32(0x480000),u32(0),u16(1),Z(32),u16(0x18),u16(0xffff),box('avcC',v.desc))})}
+ if(o.audio){const a=o.audio,tot=a.samples.reduce((s,x)=>s+x.n,0);let ent;
+  if(a.codec=='aac'){const asc=Array.from(a.desc),dsi=[5,asc.length,...asc],dcd=[4,13+dsi.length,0x40,0x15,0,0,0,...u32(a.bitrate||192000),...u32(a.bitrate||192000),...dsi],es=[3,3+dcd.length+3,...u16(1),0,...dcd,6,1,2];
+   ent=box('mp4a',Z(6),u16(1),Z(8),u16(a.ch),u16(16),u16(0),u16(0),u32(a.sr<<16),full('esds',0,0,es))}
+  else{let pre=312;if(a.desc&&a.desc.length>=12){const d=new Uint8Array(a.desc.buffer?a.desc.buffer:a.desc);pre=d[10]|d[11]<<8}
+   ent=box('Opus',Z(6),u16(1),Z(8),u16(a.ch),u16(16),u16(0),u16(0),u32(48000<<16),box('dOps',[0,a.ch],u16(pre),u32(a.sr),u16(0),[0]))}
+  tracks.push({id:2,kind:'a',ts:a.sr,dur:Math.round(tot/a.sr*1000),samples:a.samples,deltas:a.samples.map(x=>x.n),per:Math.max(1,Math.round(a.sr/(tot/a.samples.length))),
+   hdlr:'soun',media:full('smhd',0,0,Z(4)),entry:ent,audio:1})}
+ // chunks
+ const chunks=[];tracks.forEach(t=>{let pos=0;for(let i=0;i<t.samples.length;i+=t.per){chunks.push({t,i,n:Math.min(t.per,t.samples.length-i),time:pos/t.ts});for(let k=0;k<t.per&&i+k<t.deltas.length;k++)pos+=t.deltas[i+k]}});
+ chunks.sort((a,b)=>a.time-b.time||a.t.id-b.t.id);
+ const build=base=>{let off=base;chunks.forEach(c=>{c.off=off;for(let k=0;k<c.n;k++)off+=c.t.samples[c.i+k].d.length});
+  const traks=tracks.map(t=>{const cs=chunks.filter(c=>c.t===t),dm=Math.max(1,Math.round(t.dur)),
+   stts=full('stts',0,0,u32(rle(t.deltas).length),...rle(t.deltas).map(([c,d])=>[...u32(c),...u32(d)])),
+   keys=t.kind=='v'?t.samples.map((s,i)=>s.k?i+1:0).filter(Boolean):null,
+   stss=keys?full('stss',0,0,u32(keys.length),...keys.map(u32)):new Uint8Array(0),
+   stsz=full('stsz',0,0,u32(0),u32(t.samples.length),...t.samples.map(s=>u32(s.d.length))),
+   sr=[];cs.forEach((c,i)=>{if(!sr.length||sr[sr.length-1][1]!==c.n)sr.push([i+1,c.n])}),
+   stsc=full('stsc',0,0,u32(sr.length),...sr.map(([f,n])=>[...u32(f),...u32(n),...u32(1)])),
+   stco=full('stco',0,0,u32(cs.length),...cs.map(c=>u32(c.off))),
+   stbl=box('stbl',full('stsd',0,0,u32(1),t.entry),stts,stss,stsz,stsc,stco),
+   tkhd=full('tkhd',0,3,u32(0),u32(0),u32(t.id),u32(0),u32(dm),Z(8),u16(0),u16(0),u16(t.audio?256:0),u16(0),MAT,u32((t.w||0)*65536),u32((t.h||0)*65536)),
+   mdhd=full('mdhd',0,0,u32(0),u32(0),u32(t.ts),u32(Math.round(t.deltas.reduce((s,x)=>s+x,0))),u16(0x55c4),u16(0)),
+   hdlr=full('hdlr',0,0,u32(0),te(t.hdlr),Z(12),[...te('Reels'),0]),
+   dinf=box('dinf',full('dref',0,0,u32(1),full('url ',0,1)));
+   return box('trak',tkhd,box('mdia',mdhd,hdlr,box('minf',t.media,dinf,stbl)))});
+  const md=Math.max(...tracks.map(t=>Math.round(t.dur)));
+  return box('moov',full('mvhd',0,0,u32(0),u32(0),u32(1000),u32(md),u32(65536),u16(256),Z(10),MAT,Z(24),u32(tracks.length+1)),...traks)};
+ const ftyp=box('ftyp',te('isom'),u32(512),te('isomiso2avc1mp41'));
+ const m0=build(0),base=ftyp.length+m0.length+8,moov=build(base);
+ let dl=0;chunks.forEach(c=>{for(let k=0;k<c.n;k++)dl+=c.t.samples[c.i+k].d.length});
+ const parts=[ftyp,moov,Uint8Array.from([...u32(dl+8),...te('mdat')])];
+ chunks.forEach(c=>{for(let k=0;k<c.n;k++)parts.push(c.t.samples[c.i+k].d)});
+ return new Blob(parts,{type:'video/mp4'});
+}
+
+const seekTo=(v,tm)=>new Promise(r=>{const d=v.duration||1;tm=Math.min(Math.max(0,tm),d-.001);if(Math.abs(v.currentTime-tm)<.0005&&v.readyState>=2){r();return}let done=false;const fin=()=>{if(done)return;done=true;v.removeEventListener('seeked',on);r()};const on=()=>{if(v.requestVideoFrameCallback){v.requestVideoFrameCallback(()=>fin());setTimeout(fin,40)}else fin()};v.addEventListener('seeked',on);setTimeout(fin,2000);v.currentTime=tm});
+async function prepFrame(t){const n=S.imgs.length;if(!n)return;const seg=DUR/n,i=Math.min(n-1,Math.floor(t/seg)),lt=t-i*seg,X=.7,jobs=[],m=S.imgs[i];
+ if(isV(m)){const ts=m._ts||0,te=(m._te&&m._te>ts)?m._te:(m.duration||1),d=Math.max(.1,te-ts),r=m._rate||1;jobs.push(seekTo(m,ts+((lt*r)%d)+.002))}
+ if(i>0&&lt<X){const p=S.imgs[i-1];if(isV(p)){const ts=p._ts||0,te=(p._te&&p._te>ts)?p._te:(p.duration||1),d=Math.max(.1,te-ts),r=p._rate||1;jobs.push(seekTo(p,ts+((seg*r)%d)))}}
+ await Promise.all(jobs)}
+async function mixAudio(){const sr=48000,vids=$('#vs').checked?S.imgs.map((m,k)=>[m,k]).filter(([m])=>isV(m)&&m._f):[],mus=S.music&&S.mf;if(!vids.length&&!mus)return null;
+ const oc=new OfflineAudioContext(2,Math.ceil(DUR*sr),sr);let any=false;
+ if(mus){try{const buf=await oc.decodeAudioData(await S.mf.arrayBuffer()),s=oc.createBufferSource(),gn2=oc.createGain(),vol=(+$('#mv').value)/100;s.buffer=buf;s.loop=true;gn2.gain.setValueAtTime(vol,0);gn2.gain.setValueAtTime(vol,Math.max(0,DUR-1.5));gn2.gain.linearRampToValueAtTime(0,DUR);s.connect(gn2);gn2.connect(oc.destination);s.start(0,((+$('#ms').value)||0)%buf.duration);any=true}catch(e){}}
+ const seg=DUR/S.imgs.length;
+ for(const [m,k] of vids){try{const buf=await oc.decodeAudioData(await m._f.arrayBuffer()),s=oc.createBufferSource();s.buffer=buf;s.loop=true;s.playbackRate.value=m._rate||1;s.connect(oc.destination);s.start(k*seg,m._ts||0);s.stop((k+1)*seg);any=true}catch(e){}}
+ return any?await oc.startRendering():null}
+async function encAudio(ab,prog){if(!ab||!window.AudioEncoder)return null;const sr=ab.sampleRate;let cfg=null,codec='';
+ for(const [c,b] of [['mp4a.40.2',192000],['opus',160000]]){const k={codec:c,sampleRate:sr,numberOfChannels:2,bitrate:b};try{const s=await AudioEncoder.isConfigSupported(k);if(s.supported){cfg=k;codec=c=='opus'?'opus':'aac';break}}catch(e){}}
+ if(!cfg)return null;const samples=[];let desc=null,err=null;
+ const enc=new AudioEncoder({output:(ch,meta)=>{if(meta&&meta.decoderConfig&&meta.decoderConfig.description&&!desc)desc=new Uint8Array(meta.decoderConfig.description);const d=new Uint8Array(ch.byteLength);ch.copyTo(d);samples.push({d,n:Math.max(1,Math.round((ch.duration||(codec=='aac'?21333:20000))*sr/1e6))})},error:e=>err=e});
+ enc.configure(cfg);const L=ab.getChannelData(0),R=ab.numberOfChannels>1?ab.getChannelData(1):L,B=4800;
+ for(let o=0;o<L.length;o+=B){const n=Math.min(B,L.length-o),dat=new Float32Array(n*2);dat.set(L.subarray(o,o+n),0);dat.set(R.subarray(o,o+n),n);const ad=new AudioData({format:'f32-planar',sampleRate:sr,numberOfFrames:n,numberOfChannels:2,timestamp:Math.round(o/sr*1e6),data:dat});enc.encode(ad);ad.close();if(enc.encodeQueueSize>20)await new Promise(r=>setTimeout(r,2))}
+ await enc.flush();enc.close();if(err||!samples.length)return null;return{codec,sr,ch:2,desc,samples,bitrate:cfg.bitrate}}
+let hqRun=0,hqStop=0;
+async function exportHQ(){const btn=$('#hq');
+ if(hqRun){hqStop=1;return}
+ if(!window.VideoEncoder||!window.VideoFrame){alert('এই ব্রাউজারে হাই-কোয়ালিটি এক্সপোর্ট নেই — Chrome (নতুন ভার্সন) ব্যবহার করুন, অথবা "দ্রুত ভিডিও" বাটন চাপুন।');return}
+ const fps=+$('#fps').value,N=Math.max(1,Math.round(DUR*fps)),bps=Math.min(20e6,Math.max(5e6,Math.round(W*H*fps*.16)));let cfg=null;
+ for(const lm of ['realtime','quality']){if(cfg)break;for(const c of (W*H>2048*1152?['avc1.640034','avc1.4d0034']:['avc1.4d0028','avc1.42E028','avc1.640028','avc1.640034'])){const k={codec:c,width:W,height:H,bitrate:bps,framerate:fps,avc:{format:'avc'},latencyMode:lm,bitrateMode:'variable'};try{const s=await VideoEncoder.isConfigSupported(k);if(s.supported){cfg=k;break}}catch(e){}}}
+ if(!cfg){alert('এই মাপে H.264 এনকোডার পাওয়া যায়নি — "মাপ" ছোট করুন বা "দ্রুত ভিডিও" ব্যবহার করুন।');return}
+ play(false);hqRun=1;hqStop=0;OFF=1;S.rec=false;$('#ex').disabled=true;btn.textContent='⛔ বন্ধ করুন';
+ const old=S.t,vs=[];let desc=null,err=null,ok=false;
+ try{await document.fonts.ready;
+  $('#st').textContent='🔊 অডিও তৈরি হচ্ছে…';const ab=await mixAudio();
+  const enc=new VideoEncoder({output:(ch,meta)=>{if(meta&&meta.decoderConfig&&meta.decoderConfig.description&&!desc)desc=new Uint8Array(meta.decoderConfig.description);const d=new Uint8Array(ch.byteLength);ch.copyTo(d);vs.push({d,k:ch.type=='key'})},error:e=>err=e});
+  enc.configure(cfg);const t0=performance.now();
+  for(let k=0;k<N&&!hqStop&&!err;k++){const t=k/fps;await prepFrame(t);S.t=t;draw(t);const fr=new VideoFrame(cv,{timestamp:Math.round(k*1e6/fps),duration:Math.round(1e6/fps)});enc.encode(fr,{keyFrame:k%fps==0});fr.close();
+   while(enc.encodeQueueSize>6)await new Promise(r=>setTimeout(r,4));
+   if(k%5==0){const el=(performance.now()-t0)/1000,eta=el/(k+1)*(N-k-1);$('#st').textContent='💎 রেন্ডার হচ্ছে… '+Math.round((k+1)/N*100)+'% ('+(k+1)+'/'+N+' ফ্রেম) — বাকি প্রায় '+Math.ceil(eta)+' সেকেন্ড। ট্যাব খোলা রাখুন';await new Promise(r=>setTimeout(r))}}
+  if(hqStop){enc.close();$('#st').textContent='⛔ বন্ধ করা হয়েছে';}
+  else{await enc.flush();enc.close();if(err)throw err;
+   $('#st').textContent='🔊 অডিও এনকোড হচ্ছে…';const au2=await encAudio(ab);
+   $('#st').textContent='📦 MP4 ফাইল বানানো হচ্ছে…';
+   const blob=muxMP4({video:{w:W,h:H,fps,desc,samples:vs},audio:au2});deliverReel(blob,'reel_hq_'+Date.now()+'.mp4');ok=true;
+   $('#st').textContent='✔ সেরা কোয়ালিটি ভিডিও তৈরি ('+(blob.size/1e6).toFixed(1)+' MB, '+W+'×'+H+', '+fps+'fps, '+Math.round(bps/1e6)+' Mbps H.264'+(au2?', '+(au2.codec=='aac'?'AAC':'Opus')+' অডিও':', অডিও ছাড়া'+(ab?' — এই ব্রাউজারে অডিও এনকোডার নেই':''))+') — ডাউনলোড না হলে নিচের ভিডিওতে চেপে ধরে সেভ করুন'}
+ }catch(e){$('#st').textContent='⚠ হাই-কোয়ালিটি এক্সপোর্টে সমস্যা: '+(e&&e.message||e)+' — "দ্রুত ভিডিও" বাটন চেষ্টা করুন'}
+ OFF=0;hqRun=0;S.t=old;$('#ex').disabled=false;btn.textContent='💎 সেরা কোয়ালিটি ভিডিও (MP4)'}
+$('#hq').onclick=exportHQ;
+
+// ===== YouTube Link Clip Importer & Physical Segment Cutter =====
+(()=>{
+ const parseSec=v=>{
+  v=String(v||'0').trim();
+  if(/^\d+(\.\d+)?$/.test(v))return Math.max(0,parseFloat(v));
+  const p=v.split(':').map(Number);
+  if(p.some(isNaN))return 0;
+  if(p.length===2)return Math.max(0,p[0]*60+p[1]);
+  if(p.length===3)return Math.max(0,p[0]*3600+p[1]*60+p[2]);
+  return 0;
+ };
+ const parseYT=u=>{const m=(u||'').match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);return m?m[1]:''};
+ const box=$('#yt-box'),apiEl=$('#yt-api'),msgEl=$('#yt-msg'),lenEl=$('#yt-len');
+ const updLen=()=>{const ts=parseSec($('#yt-s').value),te=Math.max(ts+0.5,parseSec($('#yt-e').value));if(lenEl)lenEl.textContent='নির্বাচিত অংশ: '+(te-ts).toFixed(1)+' সেকেন্ড (বাকি সব বাদ যাবে)'};
+ if($('#yt-s'))$('#yt-s').oninput=updLen;
+ if($('#yt-e'))$('#yt-e').oninput=updLen;
+ updLen();
+ if(apiEl){apiEl.value=localStorage.getItem('yt_api_url')||'';apiEl.onchange=()=>localStorage.setItem('yt_api_url',apiEl.value.trim())}
+ if($('#yt-open'))$('#yt-open').onclick=()=>{box.style.display=box.style.display==='none'?'block':'none'};
+ if($('#yt-cls'))$('#yt-cls').onclick=()=>{box.style.display='none'};
+ const showPrev=()=>{
+  const id=parseYT($('#yt-url').value.trim()),ts=parseSec($('#yt-s').value),te=Math.max(ts+1,parseSec($('#yt-e').value));
+  if(!id){msgEl.textContent='⚠ সঠিক YouTube লিংক পেস্ট করুন।';return ''}
+  $('#yt-prev').style.display='block';
+  $('#yt-if').src='https://www.youtube.com/embed/'+id+'?start='+Math.floor(ts)+'&end='+Math.floor(te)+'&rel=0';
+  msgEl.textContent='✔ প্রিভিউ: '+ts.toFixed(0)+'s থেকে '+te.toFixed(0)+'s অংশটি দেখানো হচ্ছে।';return id
+ };
+ if($('#yt-show'))$('#yt-show').onclick=showPrev;
+
+ // Physically extract ONLY [ts, te] into a clean short MP4 & discard the rest of the big video
+ const cutOnlySegment=async(file,ts,te)=>{
+  const srcUrl=URL.createObjectURL(file);
+  const tmp=document.createElement('video');tmp.muted=true;tmp.playsInline=true;tmp.preload='auto';tmp.crossOrigin='anonymous';tmp.src=srcUrl;
+  await new Promise((res,rej)=>{tmp.onloadedmetadata=()=>res();tmp.onerror=()=>rej(new Error('ভিডিও লোড হয়নি'));setTimeout(res,4000)});
+  const dur=tmp.duration||te;
+  const s0=Math.min(ts,Math.max(0,dur-0.5)),e0=Math.min(Math.max(s0+0.5,te),dur),span=e0-s0;
+
+  // Try fast WebCodecs physical cut so the rest of the big video is 100% discarded
+  if(window.VideoEncoder&&window.VideoFrame&&tmp.videoWidth>0){
+   try{
+    const cw=Math.max(2,Math.round(tmp.videoWidth/2)*2),ch=Math.max(2,Math.round(tmp.videoHeight/2)*2),fps=30;
+    const c2=document.createElement('canvas');c2.width=cw;c2.height=ch;const ctx=c2.getContext('2d');
+    const N=Math.max(1,Math.round(span*fps)),bps=Math.min(12e6,Math.max(3e6,Math.round(cw*ch*fps*0.14)));
+    let cfg=null;
+    for(const lm of ['realtime','quality']){if(cfg)break;for(const c of ['avc1.4d0028','avc1.42E028','avc1.640028','avc1.640034']){const k={codec:c,width:cw,height:ch,bitrate:bps,framerate:fps,avc:{format:'avc'},latencyMode:lm,bitrateMode:'variable'};try{if((await VideoEncoder.isConfigSupported(k)).supported){cfg=k;break}}catch(e){}}}
+    if(cfg){
+     let ab=null;
+     if(file.size<80*1024*1024){
+      try{const ac=new OfflineAudioContext(2,Math.ceil(span*48000),48000);const dec=await ac.decodeAudioData(await file.arrayBuffer());const bs=ac.createBufferSource();bs.buffer=dec;bs.connect(ac.destination);bs.start(0,s0,span);ab=await ac.startRendering()}catch(e){}
+     }
+     const vs=[];let desc=null,err=null;
+     const enc=new VideoEncoder({output:(chk,meta)=>{if(meta&&meta.decoderConfig&&meta.decoderConfig.description&&!desc)desc=new Uint8Array(meta.decoderConfig.description);const d=new Uint8Array(chk.byteLength);chk.copyTo(d);vs.push({d,k:chk.type=='key'})},error:e=>err=e});
+     enc.configure(cfg);
+     for(let k=0;k<N&&!err;k++){
+      await seekTo(tmp,s0+k/fps);ctx.drawImage(tmp,0,0,cw,ch);
+      const fr=new VideoFrame(c2,{timestamp:Math.round(k*1e6/fps),duration:Math.round(1e6/fps)});
+      enc.encode(fr,{keyFrame:k%fps==0});fr.close();
+      while(enc.encodeQueueSize>6)await new Promise(r=>setTimeout(r,4));
+      if(k%10===0){msgEl.textContent='✂ শুধু '+span.toFixed(1)+'s অংশটি কাটা হচ্ছে… '+Math.round((k+1)/N*100)+'%';await new Promise(r=>setTimeout(r))}
+     }
+     await enc.flush();enc.close();
+     if(!err&&vs.length){
+      const au2=ab?await encAudio(ab):null;
+      const cutBlob=muxMP4({video:{w:cw,h:ch,fps,desc,samples:vs},audio:au2});
+      URL.revokeObjectURL(srcUrl);
+      return {file:new File([cutBlob],'cut_'+Math.round(s0)+'s_'+Math.round(e0)+'s.mp4',{type:'video/mp4'}),ts:0,te:span,span};
+     }
+    }
+   }catch(e){}
+  }
+  URL.revokeObjectURL(srcUrl);
+  return {file,ts:s0,te:e0,span};
+ };
+
+ const addTrimmedVideo=async(file)=>{
+  const ts=parseSec($('#yt-s').value),te=Math.max(ts+0.5,parseSec($('#yt-e').value));
+  msgEl.textContent='✂ নির্দিষ্ট অংশটি আলাদা করা হচ্ছে (বাকি অংশ বাদ দেওয়া হচ্ছে)…';
+  const res=await cutOnlySegment(file,ts,te);
+  const v=document.createElement('video');v.muted=true;v.playsInline=true;v.preload='auto';v.crossOrigin='anonymous';v.src=URL.createObjectURL(res.file);v._f=res.file;
+  await new Promise(r=>{v.onloadeddata=()=>r();v.onerror=()=>r();setTimeout(r,3000)});
+  v._ts=res.ts;v._te=res.te;
+  S.imgs.push(v);S.ed=S.imgs.length-1;
+  if(typeof showIm==='function')showIm();
+  $('#dur').value=Math.max(DUR,Math.round(res.span));$('#dur').oninput();
+  msgEl.textContent='✅ শুধু '+res.span.toFixed(1)+' সেকেন্ডের কাটা অংশটি রিলসে যুক্ত হয়েছে (বাকি বড় ভিডিও বাদ দেওয়া হয়েছে)!';
+ };
+
+ if($('#yt-file'))$('#yt-file').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(f)await addTrimmedVideo(f)};
+ if($('#yt-ext'))$('#yt-ext').onclick=()=>{
+  const u=$('#yt-url').value.trim();if(!parseYT(u)){msgEl.textContent='⚠ আগে YouTube লিংক পেস্ট করুন।';return}
+  try{navigator.clipboard.writeText(u)}catch(e){}
+  window.open('https://cobalt.tools/?u='+encodeURIComponent(u),'_blank');
+  msgEl.textContent='🌐 লিংক কপি হয়েছে ও ডাউনলোডার খোলা হয়েছে — সেভ করে "✂ ভিডিও দিয়ে শুধু এই অংশ রাখুন" বাটনে দিন।';
+ };
+ if($('#yt-fetch'))$('#yt-fetch').onclick=async()=>{
+  const u=$('#yt-url').value.trim();if(!parseYT(u)){msgEl.textContent='⚠ সঠিক YouTube লিংক পেস্ট করুন।';return}
+  const ep=(apiEl&&apiEl.value.trim())||'https://api.cobalt.tools/';
+  msgEl.textContent='⏳ YouTube থেকে ভিডিও এনে নির্দিষ্ট অংশটি কাটা হচ্ছে…';
+  try{
+   const r=await fetch(ep,{method:'POST',headers:{'Accept':'application/json','Content-Type':'application/json'},body:JSON.stringify({url:u,videoQuality:'720'})});
+   if(!r.ok)throw new Error('HTTP '+r.status);
+   const j=await r.json(),dlUrl=j.url||(j.picker&&j.picker[0]&&j.picker[0].url);
+   if(!dlUrl)throw new Error(j.text||'লিংক পাওয়া যায়নি');
+   const vr=await fetch(dlUrl);const blob=await vr.blob();
+   await addTrimmedVideo(new File([blob],'yt_clip.mp4',{type:blob.type||'video/mp4'}));
+  }catch(err){
+   msgEl.textContent='⚠ ব্রাউজার থেকে সরাসরি YouTube ব্লক করা ('+(err.message||err)+') — "🌐 ডাউনলোডার খুলুন" দিয়ে নামিয়ে "✂ ভিডিও দিয়ে শুধু এই অংশ রাখুন" ব্যবহার করুন।';
+  }
+ };
+})();
+
+</script>
+</body>
+</html>

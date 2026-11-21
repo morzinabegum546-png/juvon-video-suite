@@ -1,0 +1,8 @@
+{
+  "appId": "com.juvon.videoeditor",
+  "appName": "Juvon Video Editor",
+  "webDir": "public",
+  "server": {
+    "androidScheme": "https"
+  }
+}

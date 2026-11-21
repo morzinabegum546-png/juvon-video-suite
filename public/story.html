@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Story Video Maker — Premium Bengali Story Captions</title>
+<link rel="icon" type="image/png" href="logo-mark.png">
+<link rel="apple-touch-icon" href="icon-512.png">
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@500;600;700&family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
+<!--
+=====================================================================
+FOR GOOGLE AI STUDIO — READ FIRST
+Reusable single-file tool for a Bengali STORY channel. The user loads (1) a voice audio file and (2) a JSON (or SRT) transcript
+with timings; the tool renders a premium video on ONE canvas renderer (`R.draw`, between the //<RENDER and //RENDER> markers):
+  INTRO   black screen, animated headphone icon, "Plug in Your Headphones / হেডফোন ব্যবহার করুন।", with a synthesized phone-CALL ringtone
+  TITLE   optional title card (JSON `title`)
+  STORY   large bold white Bengali lines revealed one by one in sync with the voice (page by page), word-by-word karaoke glow,
+          dialogue lines (starting with a quote mark) tinted warm gold. Romantic animated background: twilight sky, couple silhouette,
+          bokeh, falling petals, hearts (or the user's own romantic image with slow Ken-Burns zoom).
+  AUDIO   voice + optional background music with automatic ducking under the voice + call ring SFX, mixed into one stream.
+  EXPORT  canvas.captureStream + MediaRecorder at the chosen native size (default 1920x1080), high bitrate, MP4/H.264 when supported.
+LANGUAGE MODES (select in panel): 'bn' = romantic Bengali story look (above). 'en' = ENGLISH / US-audience premium look: bold Inter ExtraBold left-aligned
+text, sentence-by-sentence with a yellow MARKER-HIGHLIGHT that sweeps each word as it is spoken (read-along), themes 'ivory' (premium paper, grain, light sweep,
+dust) and 'midnight' (navy + gold), optional channel handle watermark, thin progress line, optional background image.
+Do not change the visual design; wire up / fix only. Export runs in real time (video length = export time); keep the tab visible.
+FULL AUTO (audio only): button '🎙 শুধু অডিও দিয়ে অটো' decodes the voice to 16 kHz mono, cuts it at pauses into ~5 min WAV chunks, sends each to the Google AI Studio
+Gemini API (gemini-3.5-transcribe, word-level timestamps, Bengali bn-BD) straight from the browser with the user's API key (saved in localStorage), merges the word times,
+splits them into sentences and applies them to the player (parseJSON-compatible segments with per-word spans). If no word times come back, the text is aligned with the
+pause-based aligner below. No transformers.js / no local model. Text is editable in the editor for proofreading.
+AUTO-JSON: panel button 'স্ক্রিপ্ট দিয়ে অটো-টাইমিং' aligns a pasted script to the voice (silence detection + dynamic programming; text stays exactly the user's script, timings come from the audio), flags ambiguous lines (⚠), lets the user audition (▶) and fix times, then applies or downloads the JSON.
+JSON accepts: array or object with segments|captions|lines|transcript|subtitles|voiceoverSegments|items; per item text +
+start/end (startTimeSec, start, from, "00:01:02.300" etc). Missing times are auto-distributed across the audio length.
+=====================================================================
+-->
+<style>
+*{box-sizing:border-box;margin:0}
+html,body{height:100%;background:#050505;display:flex;align-items:center;justify-content:center;overflow:hidden;font-family:'Hind Siliguri','Noto Sans Bengali',sans-serif}
+#stage{--ar:1.7778;position:relative;height:min(100vh,calc(100vw / var(--ar)));aspect-ratio:var(--ar);background:#000;overflow:hidden}
+#cv{position:absolute;inset:0;width:100%;height:100%}
+#panel{position:fixed;top:10px;right:10px;z-index:9;background:rgba(20,22,28,.92);color:#ddd;font:13px 'Hind Siliguri',Inter,sans-serif;padding:10px 12px;border-radius:12px;display:flex;flex-direction:column;gap:7px;width:270px;max-height:96vh;overflow:auto;border:1px solid #333}
+#panel.hide{display:none}#panel button{cursor:pointer;padding:5px}#panel input[type=text]{width:100%}
+#panel label{display:flex;flex-direction:column;gap:3px}#panel input[type=password]{width:100%;background:#15151c;color:#fff;border:1px solid #333;border-radius:6px;padding:4px}#panel input[type=text]{background:#15151c;color:#fff;border:1px solid #333;border-radius:6px;padding:4px}
+</style>
+</head>
+<body>
+<div id="stage"><canvas id="cv" width="1920" height="1080"></canvas></div>
+<div id="panel">
+  <b>গল্পের ভিডিও মেকার (H = প্যানেল লুকান)</b>
+  <div style="border:1px solid #555;border-radius:8px;padding:7px;display:flex;flex-direction:column;gap:6px;background:rgba(246,199,106,.07)">
+   <b>✨ Google AI Studio (Gemini) অটো ট্রান্সক্রিপ্ট</b>
+   <label>Gemini API Key (সেভ থাকবে) <input type="password" id="gk" placeholder="AIza…" autocomplete="off"></label>
+   <label>মডেল <input type="text" id="gm" value="gemini-3.5-transcribe" spellcheck="false"></label>
+   <span id="bst" style="color:#f6c76a;font-size:12px;word-break:break-word"></span>
+  </div>
+  <label>১) ভয়েস অডিও দিন (শুধু এটাই যথেষ্ট) <input type="file" id="fa" accept="audio/*,video/*"></label>
+  <label>২) JSON / SRT ফাইল <input type="file" id="fj" accept=".json,.srt,.txt,application/json"></label>
+  <label>ব্যাকগ্রাউন্ড ছবি (ঐচ্ছিক, না দিলে রোমান্টিক অ্যানিমেশন) <input type="file" id="fb" accept="image/*"></label>
+  <label>ব্যাকগ্রাউন্ড মিউজিক (ঐচ্ছিক) <input type="file" id="fm" accept="audio/*"></label>
+  <label>গল্পের নাম (ঐচ্ছিক) <input type="text" id="ti" placeholder="যেমন: জুঁইয়ের গল্প"></label>
+  <label>ভাষা / স্টাইল <select id="lg"><option value="bn">বাংলা গল্প (রোমান্টিক)</option><option value="en">English — US audience (Premium)</option></select></label>
+  <label>English থিম <select id="th"><option value="ivory">Ivory Paper</option><option value="midnight">Midnight Gold</option></select></label>
+  <label>চ্যানেল হ্যান্ডেল (ঐচ্ছিক) <input type="text" id="hd" placeholder="@yourchannel"></label>
+  <label><input type="checkbox" id="io" checked> শুরুতে হেডফোন ইন্ট্রো + কল রিং</label>
+  <label>সাইজ <select id="sz"><option value="1920x1080">1920×1080 (YouTube)</option><option value="1280x720">1280×720</option><option value="1080x1920">1080×1920 (Shorts/Reels)</option><option value="720x1280">720×1280</option></select></label>
+  <label>লেখার সাইজ <input type="range" id="fs" min=".6" max="1.4" step=".05" value="1"></label>
+  <label>মিউজিক ভলিউম <input type="range" id="mv" min="0" max="1" step=".01" value=".35"></label>
+  <div style="display:flex;gap:6px"><button id="pp">▶ প্লে / পজ</button><button id="rs">⏮</button><span id="tm">0.0s</span></div>
+  <input type="range" id="seek" min="0" max="1" step=".05" value="0">
+  <button id="au" style="background:#f6c76a;color:#111;font-weight:700">🎙 শুধু অডিও দিয়ে অটো (Gemini ট্রান্সক্রিপ্ট + টাইমিং)</button>
+  <button id="al">⚙ স্ক্রিপ্ট থাকলে: অটো-টাইমিং (JSON)</button>
+  <button id="exp">⬇ ভিডিও এক্সপোর্ট (ফুল রেজুলেশন)</button>
+  <span id="info" style="opacity:.7">ফাইল দিন…</span>
+</div>
+<div id="ed" style="display:none;position:fixed;inset:0;z-index:20;background:rgba(6,6,10,.96);color:#eee;font:14px 'Hind Siliguri',Inter,sans-serif;padding:18px;overflow:auto">
+ <div style="max-width:1000px;margin:auto;display:flex;flex-direction:column;gap:10px">
+  <b style="font-size:18px">স্ক্রিপ্ট + ভয়েস → অটো টাইমিং (JSON)</b>
+  <div style="opacity:.8">গল্পের পুরো লেখা পেস্ট করুন (প্রতি লাইনে এক বাক্য হলে সবচেয়ে ভালো)। আগে প্যানেল থেকে ভয়েস অডিও সিলেক্ট করুন। লেখা হুবহু আপনার স্ক্রিপ্টের থাকবে, শুধু সময়টা অডিও থেকে বের হবে।</div>
+  <textarea id="sc" rows="9" style="width:100%;background:#15151c;color:#fff;border:1px solid #333;border-radius:8px;padding:8px;font:16px 'Hind Siliguri',Inter,sans-serif" placeholder="এখানে গল্পের লেখা পেস্ট করুন…"></textarea>
+  <div style="display:flex;gap:8px;flex-wrap:wrap"><button id="al-go">⚡ টাইমিং বের করুন</button><button id="al-js">📄 লোড করা JSON-এর লেখা নিন</button><button id="al-ap">✔ প্রয়োগ করুন</button><button id="al-dl">⬇ JSON ডাউনলোড</button><button id="al-x">✖ বন্ধ</button></div>
+  <div style="display:flex;gap:8px"><button id="au2" style="background:#f6c76a;color:#111;font-weight:700">🎙 অডিও থেকে অটো ট্রান্সক্রিপ্ট (Gemini)</button></div>
+  <div id="al-st" style="color:#f6c76a"></div>
+  <label><input type="checkbox" id="al-fl" checked> শুধু সন্দেহজনক (⚠) লাইন দেখান</label>
+  <div id="al-tb"></div>
+ </div></div>
+<script>
+const CFG={INTRO:4.6,TITLE_DUR:3.2,OUTRO:1.8,MUSIC_VOL:.35,MUSIC_DUCKED:.1,VOICE_DB:-48,HOLD_MS:350,FONT_SCALE:1,BG_DIM:.42,MAX_WORDS:12,PAGE_FILL:.74,MODE:'bn',THEME:'ivory',HANDLE:'',INTRO_ON:true,INTRO_BASE:4.6};
+const S={segs:[],title:'',subtitle:'',aud:null,audDur:0,pages:[],m:null,bgImg:null,T:0,playing:false,t0:0,VO:CFG.INTRO,total:CFG.INTRO+6,rang:false};
+const $=s=>document.querySelector(s),cv=$('#cv'),cx=cv.getContext('2d'),stage=$('#stage');
+//<RENDER
+const R=(()=>{
+const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x)),eOut=x=>1-Math.pow(1-clamp(x),3),md=(a,n)=>((a%n)+n)%n;
+const eBack=x=>{x=clamp(x);const a=1.70158,b=a+1;return 1+b*Math.pow(x-1,3)+a*Math.pow(x-1,2)};
+const BN=(w,s)=>`${w} ${s}px "Hind Siliguri","Noto Sans Bengali","FreeSans",sans-serif`,EN=(w,s)=>`${w} ${s}px Inter,"Hind Siliguri","FreeSans",sans-serif`;
+function rr(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath()}
+const LC=new Map();
+function layout(c,text,font,maxW,key){const k=key+'|'+font+'|'+Math.round(maxW);if(LC.has(k))return LC.get(k);
+ c.font=font;const sp=c.measureText(' ').width,toks=[],re=/\S+/g;let n=0,m;while((m=re.exec(text)))toks.push({t:m[0],i:n++});
+ const lines=[];let cur={ws:[],w:0};
+ toks.forEach(o=>{o.w=c.measureText(o.t).width;const nw=cur.ws.length?cur.w+sp+o.w:o.w;if(nw>maxW&&cur.ws.length){lines.push(cur);cur={ws:[],w:0}}o.x=cur.ws.length?cur.w+sp:0;cur.w=o.x+o.w;cur.ws.push(o)});
+ if(cur.ws.length)lines.push(cur);const r={lines,w:Math.max(0,...lines.map(l=>l.w))};LC.set(k,r);return r}
+const mk=(w,h)=>typeof document!=='undefined'?Object.assign(document.createElement('canvas'),{width:w,height:h}):globalThis.__mk(w,h);
+function rng(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+// ---------- romantic background
+let BGC=null;
+function bgInit(W,H){const r=rng(7),B=[],P=[],St=[],Hs=[];
+ for(let i=0;i<30;i++)B.push({x:r(),y:r(),r:.015+r()*.06,sp:.2+r()*.5,ph:r()*6,vy:.15+r()*.5,dx:r()-.5,a:.08+r()*.18,h:r()<.6?[255,150,175]:[255,205,150]});
+ for(let i=0;i<28;i++)P.push({x:r()*1.2-.1,y:r()*1.2-.1,s:.011+r()*.016,vx:.3+r()*.5,vy:.5+r()*.6,sw:.6+r()*1.2,ph:r()*6,rs:.4+r()*1.2,a:.35+r()*.4});
+ for(let i=0;i<70;i++)St.push({x:r(),y:r()*.55,ph:r()*6,s:.6+r()*1.2});
+ for(let i=0;i<7;i++)Hs.push({x:r(),y:r(),s:.025+r()*.03,vy:.2+r()*.3,ph:r()*6});
+ BGC={W,H,B,P,St,Hs}}
+function heart(c,x,y,s){c.beginPath();c.moveTo(x,y+s*.35);c.bezierCurveTo(x-s,y-s*.3,x-s*.55,y-s,x,y-s*.45);c.bezierCurveTo(x+s*.55,y-s,x+s,y-s*.3,x,y+s*.35);c.fill()}
+function couple(c,x,y,s){c.fillStyle='#05020b';
+ const man=x-.075*s,wom=x+.085*s;
+ c.beginPath();c.arc(man,y-.93*s,.065*s,0,7);c.fill();rr(c,man-.085*s,y-.85*s,.17*s,.47*s,.05*s);c.fill();c.fillRect(man-.075*s,y-.42*s,.065*s,.42*s);c.fillRect(man+.01*s,y-.42*s,.065*s,.42*s);
+ c.beginPath();c.arc(wom,y-.85*s,.058*s,0,7);c.fill();
+ c.beginPath();c.moveTo(wom+.02*s,y-.9*s);c.bezierCurveTo(wom+.17*s,y-.95*s,wom+.2*s,y-.62*s,wom+.13*s,y-.45*s);c.bezierCurveTo(wom+.11*s,y-.6*s,wom+.08*s,y-.72*s,wom+.02*s,y-.78*s);c.fill();
+ c.beginPath();c.moveTo(wom-.05*s,y-.78*s);c.lineTo(wom+.05*s,y-.78*s);c.bezierCurveTo(wom+.06*s,y-.6*s,wom+.16*s,y-.38*s,wom+.17*s,y-.26*s);c.lineTo(wom-.17*s,y-.26*s);c.bezierCurveTo(wom-.16*s,y-.38*s,wom-.06*s,y-.6*s,wom-.05*s,y-.78*s);c.fill();
+ c.fillRect(wom-.05*s,y-.27*s,.035*s,.27*s);c.fillRect(wom+.015*s,y-.27*s,.035*s,.27*s);
+ c.strokeStyle='#05020b';c.lineWidth=.04*s;c.lineCap='round';c.beginPath();c.moveTo(man+.07*s,y-.78*s);c.lineTo(wom-.04*s,y-.7*s);c.stroke()}
+function drawBG(c,W,H,T,S){
+ if(!BGC||BGC.W!=W||BGC.H!=H)bgInit(W,H);const hz=H*.8;
+ if(S.bgImg){const iw=S.bgImg.width||S.bgImg.naturalWidth,ih=S.bgImg.height||S.bgImg.naturalHeight,k=Math.max(W/iw,H/ih)*(1.08+.04*Math.sin(T*.05));
+  c.save();c.translate(W/2+Math.sin(T*.03)*W*.01,H/2);c.scale(k,k);c.drawImage(S.bgImg,-iw/2,-ih/2);c.restore()}
+ else{let g=c.createLinearGradient(0,0,0,hz);[[0,'#0d0820'],[.4,'#2d1245'],[.68,'#7a2860'],[.88,'#d94f6c'],[1,'#ffab86']].forEach(([o,col])=>g.addColorStop(o,col));c.fillStyle=g;c.fillRect(0,0,W,H);
+  g=c.createRadialGradient(W/2,hz,0,W/2,hz,H*.6);g.addColorStop(0,'rgba(255,175,125,.65)');g.addColorStop(1,'rgba(255,120,130,0)');c.fillStyle=g;c.fillRect(0,0,W,H);
+  c.save();c.beginPath();c.rect(0,0,W,hz);c.clip();g=c.createRadialGradient(W/2,hz,0,W/2,hz,H*.085);g.addColorStop(0,'#fff0d6');g.addColorStop(1,'#ffb98a');c.fillStyle=g;c.beginPath();c.arc(W/2,hz+H*.012,H*.075,0,7);c.fill();c.restore();
+  BGC.St.forEach(s=>{const a=(.35+.35*Math.sin(T*1.3+s.ph))*(1-s.y/.55);c.fillStyle=`rgba(255,240,255,${Math.max(0,a)})`;c.beginPath();c.arc(s.x*W,s.y*H,s.s*H/1080*1.4,0,7);c.fill()});
+  for(let i=0;i<4;i++){const x=(md(.2+i*.27+T*.004*(1+i*.3),1.4)-.2)*W;c.fillStyle='rgba(255,140,165,.13)';c.beginPath();c.ellipse(x,H*(.17+i*.1),W*.2,H*.022,0,0,7);c.fill()}
+  c.fillStyle='#3a1646';c.beginPath();c.moveTo(0,H*.86);c.bezierCurveTo(W*.2,H*.78,W*.35,H*.84,W*.55,H*.83);c.bezierCurveTo(W*.75,H*.82,W*.9,H*.86,W,H*.82);c.lineTo(W,H);c.lineTo(0,H);c.fill();
+  const px=W<H?W*.5:W*.8,hy=x=>H*.9-H*.075*Math.exp(-Math.pow((x-px)/(W*.28),2))-H*.012*Math.sin(x/W*5);
+  c.fillStyle='#0a0512';c.beginPath();c.moveTo(0,H);for(let x=0;x<=W;x+=W/60)c.lineTo(x,hy(x));c.lineTo(W,H);c.fill();
+  couple(c,px,hy(px)+H*.004,Math.min(H*.15,W*.26))}
+ c.save();c.globalCompositeOperation='lighter';BGC.B.forEach(b=>{const x=md(b.x*W+Math.sin(T*b.sp+b.ph)*W*.02+T*b.dx*W*.004,W*1.1)-W*.05,y=md(b.y*H-T*b.vy*H*.012,H*1.2)-H*.1,r=b.r*H,g=c.createRadialGradient(x,y,0,x,y,r),[R_,G_,B_]=b.h;
+  g.addColorStop(0,`rgba(${R_},${G_},${B_},${b.a})`);g.addColorStop(.8,`rgba(${R_},${G_},${B_},${b.a*.6})`);g.addColorStop(1,`rgba(${R_},${G_},${B_},0)`);c.fillStyle=g;c.beginPath();c.arc(x,y,r,0,7);c.fill()});c.restore();
+ BGC.Hs.forEach(h=>{const y=md(h.y*H-T*h.vy*H*.02,H*1.1),x=h.x*W+Math.sin(T*.8+h.ph)*W*.02,a=.22*Math.sin(Math.PI*clamp(y/H));c.fillStyle=`rgba(255,120,150,${Math.max(0,a)})`;heart(c,x,y,h.s*H)});
+ BGC.P.forEach(p=>{const x=(md(p.x+T*p.vx*.018+Math.sin(T*p.sw+p.ph)*.03+.1,1.2)-.1)*W,y=(md(p.y+T*p.vy*.028+.1,1.2)-.1)*H,s=p.s*H,rot=T*p.rs+p.ph;
+  c.save();c.translate(x,y);c.rotate(rot);c.scale(1,Math.abs(Math.cos(T*.9+p.ph))*.7+.3);c.fillStyle=`rgba(255,${105+Math.round(p.a*60)},150,${p.a})`;
+  c.beginPath();c.moveTo(0,-s);c.bezierCurveTo(s*.9,-s*.6,s*.7,s*.7,0,s);c.bezierCurveTo(-s*.7,s*.7,-s*.9,-s*.6,0,-s);c.fill();c.restore()});
+ c.fillStyle=`rgba(6,3,14,${CFG.BG_DIM})`;c.fillRect(0,0,W,H);
+ const g=c.createRadialGradient(W/2,H/2,Math.min(W,H)*.3,W/2,H/2,Math.hypot(W,H)*.55);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,.6)');c.fillStyle=g;c.fillRect(0,0,W,H)}
+// ---------- intro: headphone + call
+function headphone(c,x,y,s,T){c.save();c.translate(x,y);c.lineCap='round';c.lineJoin='round';c.strokeStyle='#fff';c.fillStyle='#fff';c.shadowColor='rgba(255,255,255,.45)';c.shadowBlur=s*.12;
+ c.lineWidth=s*.085;c.beginPath();c.arc(0,s*.05,s*.36,Math.PI*1.07,Math.PI*1.93);c.stroke();
+ [-1,1].forEach(d=>{rr(c,d*s*.36-s*.1+(d<0?-s*.03:s*.03),-s*.03,s*.2,s*.38,s*.09);c.fill()});c.restore()}
+function drawIntro(c,W,H,T,S){if(CFG.MODE=='en')return drawIntroEN(c,W,H,T,S);const por=W<H,A=clamp((CFG.INTRO-T)/.6),u=Math.min(W,H)/100;if(A<=0)return;
+ c.save();c.globalAlpha=A;const g=c.createRadialGradient(W/2,H*.5,0,W/2,H*.5,Math.max(W,H)*.6);g.addColorStop(0,'rgba(60,18,48,.45)');g.addColorStop(1,'rgba(0,0,0,0)');c.fillStyle=g;c.fillRect(0,0,W,H);
+ const ix=por?W/2:W*.3,iy=por?H*.27:H*.36,is=por?W*.34:H*.2,ring=T<2.5?Math.sin(T*2*Math.PI*14)*.035*clamp((2.5-T)/.3)*clamp(T/.2):0;
+ for(let k=0;k<3;k++){const p=md(T*.55+k/3,1),r=is*(.55+p*.9);c.strokeStyle=`rgba(255,150,175,${.35*(1-p)*clamp(T/.6)})`;c.lineWidth=is*.02;c.beginPath();c.arc(ix,iy,r,0,7);c.stroke()}
+ c.save();c.translate(ix,iy);c.rotate(ring);const sc=eBack(T/.7);c.scale(sc,sc);c.globalAlpha=A*clamp(T/.3);headphone(c,0,0,is,T);c.restore();
+ const e1='Plug in Your Headphones',e2='For A Better Experience',es=por?W*.05:H*.052,ep=clamp((T-.35)/.6),tx=por?W/2:W*.4;
+ c.globalAlpha=A*ep;c.fillStyle='#fff';c.font=EN(600,es);c.textBaseline='middle';c.textAlign=por?'center':'left';c.shadowColor='rgba(255,255,255,.25)';c.shadowBlur=es*.3;
+ const ey=por?H*.43:H*.33;c.fillText(e1,tx+(1-eOut(ep))*u*3,ey);c.fillText(e2,tx+(1-eOut(ep))*u*3,ey+es*1.45);c.shadowBlur=0;
+ let bs=por?W*.115:H*.125;c.font=BN(700,bs);const w0=c.measureText('হেডফোন ব্যবহার করুন।').width;if(w0>W*.86)bs*=W*.86/w0;const bp=eOut((T-.9)/.9);if(bp>0){c.font=BN(700,bs);const w=c.measureText('হেডফোন ব্যবহার করুন।').width,bx=W/2,by=por?H*.6:H*.72;c.save();c.beginPath();c.rect(bx-w/2-bs*.2,by-bs,(w+bs*.4)*bp,bs*2);c.clip();
+  c.textAlign='center';c.fillStyle='#fff';c.shadowColor='rgba(255,170,190,.45)';c.shadowBlur=bs*.2;c.fillText('হেডফোন ব্যবহার করুন।',bx,by);c.restore();
+  const lw=w*.5*eOut((T-1.6)/.8);if(lw>0){const lg=c.createLinearGradient(bx-lw/2,0,bx+lw/2,0);lg.addColorStop(0,'rgba(246,199,106,0)');lg.addColorStop(.5,'#f6c76a');lg.addColorStop(1,'rgba(246,199,106,0)');c.fillStyle=lg;c.fillRect(bx-lw/2,by+bs*.75,lw,Math.max(2,u*.25))}}
+ c.restore()}
+function drawTitle(c,W,H,T,S){const L=CFG.TITLE_DUR,lt=T-CFG.INTRO,A=clamp(lt/.6)*clamp((L-lt)/.6);if(A<=0||!S.title)return;const en=CFG.MODE=='en',light=en&&CFG.THEME!='midnight',por=W<H,fs=(por?W*.11:H*.12)*(en?.9:1),u=Math.min(W,H)/100,tf=en?EN(800,fs):BN(700,fs),col=light?'#14110c':'#fff';
+ c.save();c.globalAlpha=A;c.textAlign='center';c.textBaseline='middle';const sc=.94+.06*eOut(lt/1.2);c.translate(W/2,H/2);c.scale(sc,sc);
+ c.fillStyle='#f6c76a';c.shadowColor='rgba(246,199,106,.6)';c.shadowBlur=u*1.2;if(en){c.font=EN(600,u*2.6);c.fillStyle=light?'#a8741a':'#f6c76a';c.shadowBlur=0;c.fillText((S.subtitle||'A STORY').toUpperCase(),0,-fs*1.15)}else{c.font='700 '+u*5+'px Georgia,serif';c.fillText('\u2665',0,-fs*1.15)}c.shadowBlur=0;
+ const lay=layout(c,S.title,tf,W*.84,'title'+S.title+W+en);c.fillStyle=col;c.font=tf;c.shadowColor=en?'rgba(0,0,0,0)':'rgba(255,170,190,.5)';c.shadowBlur=en?0:fs*.25;
+ lay.lines.forEach((ln,i)=>c.fillText(ln.ws.map(w=>w.t).join(' '),0,(i-(lay.lines.length-1)/2)*fs*1.4));c.shadowBlur=0;
+ const lw=W*.25*eOut((lt-.3)/.9),yy=(lay.lines.length/2)*fs*1.4+fs*.2,g=c.createLinearGradient(-lw/2,0,lw/2,0);g.addColorStop(0,'rgba(246,199,106,0)');g.addColorStop(.5,light?'#a8741a':'#f6c76a');g.addColorStop(1,'rgba(246,199,106,0)');c.fillStyle=g;c.fillRect(-lw/2,yy,lw,Math.max(2,u*.25));c.restore()}
+// ---------- English / US mode
+const TH=()=>CFG.THEME=='midnight'?{ink:[255,255,255],mk:'rgba(255,196,64,.95)',mt:[22,15,4],dim:.32}:{ink:[20,17,12],mk:'rgba(255,208,45,.96)',mt:[20,17,12],dim:.3};
+let EC=null,PN=null;
+function drawBGEN(c,W,H,T,S){const mid=CFG.THEME=='midnight';
+ if(!EC||EC.W!=W||EC.H!=H){const r=rng(11),D=[],F=[];for(let i=0;i<38;i++)D.push({x:r(),y:r(),s:.0018+r()*.004,v:.2+r()*.5,ph:r()*6,a:.25+r()*.4});for(let i=0;i<16;i++)F.push({x:r(),y:r(),l:.04+r()*.1,a:r()*6});EC={W,H,D,F}}
+ if(S.bgImg){const iw=S.bgImg.width||S.bgImg.naturalWidth,ih=S.bgImg.height||S.bgImg.naturalHeight,k=Math.max(W/iw,H/ih)*(1.06+.03*Math.sin(T*.05));c.save();c.translate(W/2,H/2);c.scale(k,k);c.drawImage(S.bgImg,-iw/2,-ih/2);c.restore();c.fillStyle=mid?'rgba(5,8,18,.62)':'rgba(243,236,220,.8)';c.fillRect(0,0,W,H)}
+ else if(mid){let g=c.createLinearGradient(0,0,0,H);g.addColorStop(0,'#050814');g.addColorStop(.6,'#0d1832');g.addColorStop(1,'#131b2c');c.fillStyle=g;c.fillRect(0,0,W,H);g=c.createRadialGradient(W*.82,H*.15,0,W*.82,H*.15,H*.8);g.addColorStop(0,'rgba(255,190,90,.16)');g.addColorStop(1,'rgba(255,190,90,0)');c.fillStyle=g;c.fillRect(0,0,W,H)}
+ else{let g=c.createLinearGradient(0,0,0,H);g.addColorStop(0,'#f7f1e2');g.addColorStop(1,'#e3d7bb');c.fillStyle=g;c.fillRect(0,0,W,H);g=c.createRadialGradient(W*.5,H*.4,0,W*.5,H*.4,Math.hypot(W,H)*.5);g.addColorStop(0,'rgba(255,253,243,.7)');g.addColorStop(1,'rgba(255,253,243,0)');c.fillStyle=g;c.fillRect(0,0,W,H)}
+ if(!S.bgImg){if(!PN){const e=mk(256,256),g=e.getContext('2d'),im=g.createImageData(256,256);for(let i=0;i<im.data.length;i+=4){const n=110+Math.random()*145;im.data[i]=im.data[i+1]=im.data[i+2]=n;im.data[i+3]=255}g.putImageData(im,0,0);PN=c.createPattern(e,'repeat')}
+  c.save();c.globalAlpha=mid?.05:.16;c.globalCompositeOperation=mid?'screen':'multiply';c.fillStyle=PN;c.fillRect(0,0,W,H);c.restore();
+  if(!mid){c.strokeStyle='rgba(120,95,60,.07)';c.lineWidth=Math.max(1,H/1080);EC.F.forEach(f=>{const x=f.x*W,y=f.y*H,l=f.l*W;c.beginPath();c.moveTo(x,y);c.quadraticCurveTo(x+Math.cos(f.a)*l*.5,y+Math.sin(f.a)*l*.6+l*.1,x+Math.cos(f.a)*l,y+Math.sin(f.a)*l);c.stroke()})}}
+ c.save();c.globalCompositeOperation=mid?'lighter':'source-over';EC.D.forEach(d=>{const x=(d.x+Math.sin(T*.2+d.ph)*.02)*W,y=md(d.y-T*d.v*.006,1.05)*H,a=d.a*(.6+.4*Math.sin(T*.9+d.ph));c.fillStyle=mid?`rgba(255,215,140,${a*.5})`:`rgba(255,248,225,${a*.9})`;c.beginPath();c.arc(x,y,d.s*H*1.6,0,7);c.fill()});c.restore();
+ const sx=(md(T*.045,1.8)-.4)*W,g2=c.createLinearGradient(sx-W*.15,0,sx+W*.15,H*.4);g2.addColorStop(0,'rgba(255,255,255,0)');g2.addColorStop(.5,mid?'rgba(255,200,120,.06)':'rgba(255,255,255,.22)');g2.addColorStop(1,'rgba(255,255,255,0)');c.fillStyle=g2;c.fillRect(0,0,W,H);
+ const vg=c.createRadialGradient(W/2,H/2,Math.min(W,H)*.35,W/2,H/2,Math.hypot(W,H)*.58);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,mid?'rgba(0,0,0,.55)':'rgba(92,70,36,.28)');c.fillStyle=vg;c.fillRect(0,0,W,H)}
+function drawIntroEN(c,W,H,T,S){const por=W<H,A=clamp((CFG.INTRO-T)/.6),u=Math.min(W,H)/100;if(A<=0)return;c.save();c.globalAlpha=A;
+ const g=c.createRadialGradient(W/2,H*.5,0,W/2,H*.5,Math.max(W,H)*.6);g.addColorStop(0,'rgba(48,40,22,.5)');g.addColorStop(1,'rgba(0,0,0,0)');c.fillStyle=g;c.fillRect(0,0,W,H);
+ const ix=W/2,iy=por?H*.34:H*.34,is=por?W*.3:H*.2,ring=T<2.5?Math.sin(T*2*Math.PI*14)*.035*clamp((2.5-T)/.3)*clamp(T/.2):0;
+ for(let k=0;k<3;k++){const p=md(T*.55+k/3,1),r=is*(.55+p*.9);c.strokeStyle=`rgba(246,199,106,${.35*(1-p)*clamp(T/.6)})`;c.lineWidth=is*.02;c.beginPath();c.arc(ix,iy,r,0,7);c.stroke()}
+ c.save();c.translate(ix,iy);c.rotate(ring);const sc=eBack(T/.7);c.scale(sc,sc);c.globalAlpha=A*clamp(T/.3);headphone(c,0,0,is,T);c.restore();
+ const f1=por?W*.075:H*.085,f2=por?W*.042:H*.043,ep=eOut((T-.45)/.7),e2=eOut((T-.95)/.7);c.textAlign='center';c.textBaseline='middle';
+ c.globalAlpha=A*ep;c.fillStyle='#fff';c.font=EN(800,f1);c.shadowColor='rgba(255,255,255,.25)';c.shadowBlur=f1*.3;c.fillText('Plug in your headphones',W/2,iy+is*.95+(1-ep)*u*3);c.shadowBlur=0;
+ c.globalAlpha=A*e2;c.fillStyle='#f6c76a';c.font=EN(600,f2);c.fillText('FOR THE BEST EXPERIENCE',W/2,iy+is*.95+f1*1.15+(1-e2)*u*2);
+ const lw=W*.16*eOut((T-1.5)/.8);if(lw>0){const lg=c.createLinearGradient(W/2-lw/2,0,W/2+lw/2,0);lg.addColorStop(0,'rgba(246,199,106,0)');lg.addColorStop(.5,'#f6c76a');lg.addColorStop(1,'rgba(246,199,106,0)');c.globalAlpha=A;c.fillStyle=lg;c.fillRect(W/2-lw/2,iy+is*.95+f1*1.15+f2*1.2,lw,Math.max(2,u*.25))}
+ c.restore()}
+function drawStoryEN(c,W,H,T,S){const Ta=T-S.VO;if(!S.pages.length||Ta<0)return;const pg=S.pages.find(p=>Ta>=p.s-.05&&Ta<p.e);if(!pg)return;
+ const m=S.m,th=TH(),fade=clamp((pg.e-Ta)/.35),x0=W*(m.por?.06:.07),top=(H-pg.n*m.lh)/2-H*.02;
+ c.save();c.font=EN(800,m.fs);c.textBaseline='middle';c.textAlign='left';
+ pg.segs.forEach(sg=>{const lt=Ta-sg.s;if(lt<0)return;const p=eOut(lt/.45),past=clamp((Ta-sg.e)/.5);
+  sg.lay.lines.forEach((ln,li)=>{const y=top+(sg.row+li)*m.lh+m.lh/2+(1-p)*m.fs*.35;
+   ln.ws.forEach(w=>{const st=sg.wt[w.i],en=sg.wt[w.i+1]!=null?sg.wt[w.i+1]:sg.e,on=clamp((Ta-st)/.12),x=x0+w.x,cur=Ta>=st&&Ta<en,ma=Ta<en?1:1-(Ta-en)/.25;
+    if(Ta>=st&&ma>0){const pp=eOut((Ta-st)/.2),pad=m.fs*.12;c.globalAlpha=p*fade*ma;c.fillStyle=th.mk;rr(c,x-pad,y-m.fs*.5,(w.w+pad*2)*pp,m.fs,m.fs*.2);c.fill()}
+    c.globalAlpha=(th.dim+(1-th.dim)*on)*(1-.42*past)*p*fade;c.fillStyle=`rgb(${cur?th.mt:th.ink})`;c.fillText(w.t,x,y)})})});c.restore()}
+function drawChrome(c,W,H,T,S,A){const u=Math.min(W,H)/100,mid=CFG.THEME=='midnight'||CFG.MODE!='en';
+ if(CFG.HANDLE){c.save();c.globalAlpha=A*.55;c.fillStyle=mid?'#fff':'#14110c';c.font=EN(600,u*2.3);c.textAlign='right';c.textBaseline='middle';c.fillText(CFG.HANDLE,W-u*3,H-u*3.2);c.restore()}
+ if(CFG.MODE=='en'){c.save();c.globalAlpha=A*.9;const g=c.createLinearGradient(0,0,W,0);g.addColorStop(0,'#f6c76a');g.addColorStop(1,'#ff9f43');c.fillStyle=g;c.fillRect(0,H-Math.max(3,u*.45),W*clamp(T/S.total),Math.max(3,u*.45));c.restore()}}
+// ---------- story pages
+function metrics(W,H){const por=W<H,en=CFG.MODE=='en',fs=(en?(por?W*.085:H*.088):(por?W*.078:H*.082))*(CFG.FONT_SCALE||1);return{fs,lh:fs*(en?1.3:1.55),maxW:W*(por?.88:.86)-(en?W*.0:0),por,en}}
+function buildPages(c,W,H,segs){const m=metrics(W,H),cap=Math.max(1,Math.floor(H*(m.en?.62:CFG.PAGE_FILL)/m.lh)),pages=[];let cur=null;
+ segs.forEach((sg,i)=>{const lay=layout(c,sg.t,m.en?EN(800,m.fs):BN(700,m.fs),m.maxW,'st'+i+'|'+W+'x'+H+m.en);const n=lay.lines.length;
+  if(!cur||cur.n+n>cap){cur={segs:[],n:0};pages.push(cur)}sg.lay=lay;sg.row=cur.n;cur.n+=n;cur.segs.push(sg)});
+ pages.forEach(p=>p.s=p.segs[0].s);pages.forEach((p,i)=>p.e=i<pages.length-1?pages[i+1].s:p.segs[p.segs.length-1].e+1.2);return{pages,m}}
+function drawStory(c,W,H,T,S){const Ta=T-S.VO;if(!S.pages.length||Ta<0)return;const pg=S.pages.find(p=>Ta>=p.s-.05&&Ta<p.e);if(!pg)return;
+ const m=S.m,fade=clamp((pg.e-Ta)/.35),top=(H-pg.n*m.lh)/2;c.save();c.font=BN(700,m.fs);c.textBaseline='middle';c.textAlign='left';c.lineJoin='round';
+ pg.segs.forEach(sg=>{const lt=Ta-sg.s;if(lt<0)return;const p=eOut(lt/.4),past=clamp((Ta-sg.e)/.5),dlg=/^[\u201C"\u2018']/.test(sg.t.trim()),col=dlg?[255,227,191]:[255,255,255];
+  sg.lay.lines.forEach((ln,li)=>{const y=top+(sg.row+li)*m.lh+m.lh/2+(1-p)*m.fs*.3;
+   ln.ws.forEach(w=>{const on=clamp((Ta-sg.wt[w.i])/.12),a=(.4+.6*on)*(1-.28*past)*p*fade,x=(W-ln.w)/2+w.x;
+    c.globalAlpha=a;c.lineWidth=m.fs*.09;c.strokeStyle='rgba(0,0,0,.6)';c.strokeText(w.t,x,y);
+    c.shadowColor=dlg?'rgba(255,200,140,.55)':'rgba(255,190,210,.5)';c.shadowBlur=m.fs*.28*on*(1-past);c.fillStyle=`rgb(${col})`;c.fillText(w.t,x,y);c.shadowBlur=0})})});c.restore()}
+function draw(c,W,H,T,S){
+ c.fillStyle='#000';c.fillRect(0,0,W,H);const bgA=clamp((T-(CFG.INTRO-.9))/.9);
+ if(bgA>0){(CFG.MODE=='en'?drawBGEN:drawBG)(c,W,H,T,S);if(bgA<1){c.fillStyle=`rgba(0,0,0,${1-bgA})`;c.fillRect(0,0,W,H)}}
+ if(T<CFG.INTRO)drawIntro(c,W,H,T,S);drawTitle(c,W,H,T,S);(CFG.MODE=='en'?drawStoryEN:drawStory)(c,W,H,T,S);if(bgA>0)drawChrome(c,W,H,T,S,bgA);
+ const o=1-clamp((S.total-T)/.9);if(o>0){c.fillStyle=`rgba(0,0,0,${o})`;c.fillRect(0,0,W,H)}}
+return{draw,buildPages,metrics}})();
+//RENDER>
+//<ALIGN
+const AL=(()=>{
+const HOP=.02,MARG=.15;
+function envelope(x,sr){const w=Math.round(sr*HOP),n=Math.floor(x.length/w),db=new Float32Array(n);for(let i=0;i<n;i++){let s=0;for(let j=i*w,e=j+w;j<e;j++)s+=x[j]*x[j];db[i]=10*Math.log10(s/w+1e-12)}return db}
+function otsu(db){const B=new Float64Array(101);let N=0;for(const v of db){B[Math.max(0,Math.min(100,Math.round(v+100)))]++;N++}
+ let sum=0;for(let i=0;i<101;i++)sum+=i*B[i];let wB=0,sB=0,best=-1,thr=50;for(let i=0;i<101;i++){wB+=B[i];if(!wB)continue;const wF=N-wB;if(!wF)break;sB+=i*B[i];const mB=sB/wB,mF=(sum-sB)/wF,v=wB*wF*(mB-mF)*(mB-mF);if(v>best){best=v;thr=i}}return thr-100}
+function chunks(db,thr,minPause){const out=[],mp=Math.round(minPause/HOP);let st=-1,last=-1;
+ for(let i=0;i<db.length;i++)if(db[i]>thr){if(st<0)st=i;else if(i-last-1>=mp){out.push([st*HOP,(last+1)*HOP]);st=i}last=i}
+ if(st>=0)out.push([st*HOP,(last+1)*HOP]);return out.filter(c=>c[1]-c[0]>=.12)}
+const cnt=s=>Math.max(1,s.replace(/\s+/g,'').length);
+function pickChunks(db,M){const t0=otsu(db);let fb=null;for(const mp of [.12,.16,.2,.25,.3,.4,.5])for(const d of [0,4,-4]){const ch=chunks(db,t0+d,mp);if(ch.length>=M&&ch.length<=7*M)return{ch,thr:t0+d,mp};if(!fb&&ch.length>=M)fb={ch,thr:t0+d,mp}}
+ return fb||{ch:chunks(db,t0,.12),thr:t0,mp:.12}}
+function speechMap(sp){const tot=sp.reduce((a,x)=>a+x[1]-x[0],0)||1;return p=>{let r=Math.max(0,Math.min(1,p))*tot;for(const[a,b]of sp){if(r<=b-a)return a+r;r-=b-a}return sp[sp.length-1][1]}}
+function align(db,sentences,dur){const M=sentences.length,chars=sentences.map(cnt),totC=chars.reduce((a,b)=>a+b,0);
+ const{ch,thr,mp}=pickChunks(db,M),K=ch.length;if(!K)return null;
+ const cs=new Float64Array(K+1);for(let i=0;i<K;i++)cs[i+1]=cs[i]+ch[i][1]-ch[i][0];const totS=cs[K],rate=totS/totC;
+ const gap=i=>i<K-1?ch[i+1][0]-ch[i][1]:2;
+ let mode='dp',groups=null;
+ let marg=null;
+ if(K>=M){const G=Math.max(14,Math.ceil(K/M)*5),INF=1e18,par=new Int32Array(M*K).fill(-1);let pf=new Float64Array(K).fill(INF),cf=new Float64Array(K);
+  const cost=(j,a,b)=>{const d=cs[b+1]-cs[a],e=chars[j]*rate,r=(d-e)/(e+.4);return r*r};
+  const bonus=(b,j)=>{if(j>=M-1)return 0;const g=gap(b);return -.5*Math.min(g,1.4)+(g<.2?.35:0)};
+  for(let b=0;b<Math.min(K-(M-1),G);b++)pf[b]=cost(0,0,b)+bonus(b,0);
+  for(let j=1;j<M;j++){cf.fill(INF);const kmin=j-1,kmax=K-1-(M-j);for(let k=kmin;k<=kmax;k++){const pv=pf[k];if(pv>=INF)continue;const a=k+1,bmax=j==M-1?K-1:Math.min(K-1-(M-1-j),a+G-1),bmin=j==M-1?K-1:a;
+    for(let b=bmin;b<=bmax;b++){const v=pv+cost(j,a,b)+bonus(b,j);if(v<cf[b]){cf[b]=v;par[j*K+b]=k}}}const tmp=pf;pf=cf;cf=tmp}
+  if(pf[K-1]<INF){groups=new Array(M);let b=K-1;for(let j=M-1;j>=0;j--){const pk=j?par[j*K+b]:-1;groups[j]=[pk+1,b];b=pk}
+   // min-marginals in a band around the chosen path -> how much worse is the best alternative boundary? (small margin = ambiguous)
+   const B=10,W=2*B+1,e=groups.map(g=>g[1]),F=new Float64Array(M*W).fill(INF),Gb=new Float64Array(M*W).fill(INF),ok=(j,k)=>k>=Math.max(0,e[j]-B)&&k<=Math.min(K-1,e[j]+B),ix=(j,k)=>j*W+(k-e[j]+B);
+   for(let k=e[0]-B;k<=e[0]+B;k++)if(k>=0&&k<K&&k+1<=G)F[ix(0,k)]=cost(0,0,k)+bonus(k,0);
+   for(let j=1;j<M;j++)for(let k=e[j]-B;k<=e[j]+B;k++){if(k<0||k>=K||(j==M-1&&k!=K-1))continue;let best=INF;for(let kp=e[j-1]-B;kp<=e[j-1]+B;kp++){if(kp<0||kp>=k||k-kp>G)continue;const pv=F[ix(j-1,kp)];if(pv>=INF)continue;const v=pv+cost(j,kp+1,k)+bonus(k,j);if(v<best)best=v}F[ix(j,k)]=best}
+   Gb[ix(M-1,K-1)]=0;
+   for(let j=M-2;j>=0;j--)for(let k=e[j]-B;k<=e[j]+B;k++){if(k<0||k>=K)continue;let best=INF;for(let kn=e[j+1]-B;kn<=e[j+1]+B;kn++){if(kn<=k||kn-k>G||kn>=K)continue;const gv=Gb[ix(j+1,kn)];if(gv>=INF)continue;const v=cost(j+1,k+1,kn)+bonus(kn,j+1)+gv;if(v<best)best=v}Gb[ix(j,k)]=best}
+   marg=new Float64Array(M).fill(9);for(let j=0;j<M-1;j++){const bestv=F[ix(j,e[j])]+Gb[ix(j,e[j])];let alt=INF;for(let k=e[j]-B;k<=e[j]+B;k++){if(k===e[j]||k<0||k>=K)continue;const v=F[ix(j,k)]+Gb[ix(j,k)];if(v<alt)alt=v}marg[j]=alt>=INF?9:alt-bestv}}}
+ const segs=[];
+ if(groups){mode='dp';groups.forEach(([a,b],j)=>{const spans=ch.slice(a,b+1).map(x=>x.slice());const g0=j?ch[a][0]-ch[a-1][1]:99;segs.push({s:ch[a][0],e:ch[b][1],spans,gapBefore:g0,amb:j>0&&marg&&marg[j-1]<MARG})})}
+ else{mode='prop';const f=speechMap(ch);let cum=0;chars.forEach((c,j)=>{const p0=cum/totC,p1=(cum+c)/totC;cum+=c;const s=f(p0+1e-6),e=f(p1-1e-6),sp=[];ch.forEach(x=>{const a=Math.max(x[0],s),b=Math.min(x[1],e);if(b>a)sp.push([a,b])});segs.push({s,e,spans:sp.length?sp:[[s,e]],gapBefore:0})})}
+ for(let j=0;j<segs.length;j++){const sg=segs[j],prevE=j?segs[j-1].e:0,nextS=j<segs.length-1?segs[j+1].s:dur||sg.e+1;
+  sg.s=Math.max(prevE+.01,sg.s-.06);sg.e=Math.min(nextS-.02,sg.e+.12);if(sg.e<=sg.s)sg.e=sg.s+.3;sg.spans[0][0]=Math.max(sg.s,sg.spans[0][0]);sg.spans[sg.spans.length-1][1]=Math.min(sg.e,sg.spans[sg.spans.length-1][1])}
+ segs.forEach((sg,j)=>{const sd=sg.spans.reduce((a,x)=>a+x[1]-x[0],0),dev=Math.abs(sd/(chars[j]*rate)-1);sg.dev=dev;sg.flag=mode=='prop'||dev>.3||sg.amb||(j<M-1&&segs[j+1].amb)});
+ return{segs,info:{K,M,thr,mp,mode,flagged:segs.filter(s=>s.flag).length}}}
+function splitScript(txt){let lines=txt.replace(/\r/g,'').split('\n').map(s=>s.trim()).filter(Boolean),out=[];
+ lines.forEach(l=>{if(l.split(/\s+/).length<=28){out.push(l);return}
+  l.split(/(?<=[।?!])\s+|(?<=[.])\s+(?=[A-Z\u201C"\u0980-\u09FF])/).forEach(p=>{p=p.trim();if(p)out.push(p)})});return out}
+function sliceBounds(db,target){target=target||300;const t0=otsu(db),ch=chunks(db,t0,.3),dur=db.length*HOP,gaps=[];for(let i=0;i<ch.length-1;i++)gaps.push((ch[i][1]+ch[i+1][0])/2);
+ const b=[0];let next=target;while(next<dur-60){let best=null,bd=1e9;for(const g of gaps){if(g<=b[b.length-1]+60)continue;const d=Math.abs(g-next);if(d<bd){bd=d;best=g}}b.push(best!=null&&bd<90?best:next);next=b[b.length-1]+target}b.push(dur);return b}
+return{envelope,align,splitScript,speechMap,sliceBounds}})();
+//ALIGN>
+
+// ---- parsing: JSON / SRT -> segments
+const toSec=x=>{if(x==null||x==='')return NaN;if(typeof x=='number')return x;const s=String(x).trim().replace(',','.');if(/^\d+(\.\d+)?$/.test(s))return +s;const p=s.split(':').map(Number);return p.some(isNaN)?NaN:p.reduce((a,b)=>a*60+b,0)};
+const pick=(o,ks)=>{for(const k of ks)if(o[k]!=null&&o[k]!=='')return o[k]};
+function parseJSON(o){let arr=Array.isArray(o)?o:null;const title=(!Array.isArray(o)&&o&&pick(o,['title','storyTitle','name','videoTitle']))||'';
+ if(!arr&&o&&typeof o=='object'){for(const k of ['voiceoverSegments','segments','captions','lines','transcript','subtitles','onScreenCaptions','sentences','items'])if(Array.isArray(o[k])){arr=o[k];break}
+  if(!arr)for(const k in o)if(Array.isArray(o[k])&&o[k].length&&typeof o[k][0]=='object'){arr=o[k];break}}
+ return{title:typeof title=='string'?title:'',subtitle:(!Array.isArray(o)&&o&&pick(o,['subtitle','level','tagline','series']))||'',segs:(arr||[]).map(it=>typeof it=='string'?{t:it.trim(),s:NaN,e:NaN}:{t:String(pick(it,['text','spokenBengali','bengaliCaptionText','caption','line','content','bengali','sentence','subtitle','transcript'])||'').trim(),s:toSec(pick(it,['startTimeSec','start','startTime','start_time','from','begin','s','startSec','time'])),e:toSec(pick(it,['endTimeSec','end','endTime','end_time','to','finish','e','endSec'])),spans:Array.isArray(it.spans)?it.spans:undefined}).filter(x=>x.t)}}
+function parseSRT(txt){const segs=[],re=/(\d\d:\d\d:\d\d[,.]\d+)\s*-->\s*(\d\d:\d\d:\d\d[,.]\d+)\s*\n([\s\S]*?)(?=\n\s*\n|\s*$)/g;let m;while((m=re.exec(txt.replace(/\r/g,''))))segs.push({s:toSec(m[1]),e:toSec(m[2]),t:m[3].replace(/\n/g,' ').trim()});return{title:'',segs}}
+function normalize(segs,dur){segs=segs.map(x=>({...x}));
+ if(dur&&segs.some(x=>x.s>dur*20))segs.forEach(x=>{x.s/=1000;x.e/=1000});
+ if(segs.some(x=>isNaN(x.s))){const tot=segs.reduce((a,x)=>a+x.t.length,0),D=Math.max(dur||segs.length*3,3)-.6;let t=.3;segs.forEach(x=>{const d=D*x.t.length/tot;x.s=t;x.e=t+d-.05;t+=d})}
+ segs.forEach((x,i)=>{if(isNaN(x.e)||x.e<=x.s)x.e=segs[i+1]&&segs[i+1].s>x.s?segs[i+1].s-.05:x.s+Math.max(1.2,x.t.length*.07)});
+ const out=[];segs.forEach(sg=>{const ws=sg.t.split(/\s+/).filter(Boolean);if(ws.length<=CFG.MAX_WORDS){out.push(sg);return}
+  const g=[];let c=[];ws.forEach(w=>{c.push(w);if(c.length>=CFG.MAX_WORDS-3||(/[।,?!—.…”"]$/.test(w)&&c.length>=4)){g.push(c);c=[]}});if(c.length){if(g.length&&c.length<3)g[g.length-1].push(...c);else g.push(c)}
+  const tot=ws.join('').length,f=sg.spans&&sg.spans.length?AL.speechMap(sg.spans):null;let cum=0,t=sg.s;
+  g.forEach(c=>{const n=c.join('').length,p0=cum/tot,p1=(cum+n)/tot;cum+=n;let s,e;if(f){s=f(p0+1e-6);e=f(p1-1e-6)}else{s=t;e=t+(sg.e-sg.s)*n/tot;t=e}const o={t:c.join(' '),s,e};if(f)o.spans=cropSpans(sg.spans,s,e);out.push(o)})});
+ out.forEach(sg=>{const ws=sg.t.split(/\s+/).filter(Boolean),tot=ws.join('').length,f=sg.spans&&sg.spans.length?AL.speechMap(sg.spans):null;let cum=0;sg.wt=ws.map(w=>{const o=f?f(cum/tot):sg.s+(sg.e-sg.s)*.92*cum/tot;cum+=w.length;return o})});return out}
+function cropSpans(sp,a,b){const o=[];sp.forEach(x=>{const s=Math.max(x[0],a),e=Math.min(x[1],b);if(e>s)o.push([s,e])});return o.length?o:[[a,b]]}
+// ---- state / layout rebuild
+function rebuild(){const W=cv.width,H=cv.height;CFG.INTRO=CFG.INTRO_ON?CFG.INTRO_BASE:0;S.VO=CFG.INTRO+(S.title?CFG.TITLE_DUR:0);
+ const segEnd=S.segs.length?S.segs[S.segs.length-1].e:5,dur=S.audDur||segEnd+1;S.total=S.VO+dur+CFG.OUTRO;
+ const b=R.buildPages(cx,W,H,S.segs);S.pages=b.pages;S.m=b.m;$('#seek').max=S.total;
+ $('#info').textContent=(S.segs.length?S.segs.length+' লাইন, ':'')+(S.audDur?'অডিও '+S.audDur.toFixed(0)+'s, ':'অডিও নেই, ')+'মোট ভিডিও '+Math.round(S.total)+'s ('+W+'×'+H+')'}
+let rawSegs=[],rawTitle='';
+function reparse(){S.title=$('#ti').value.trim()||rawTitle;S.segs=normalize(rawSegs,S.audDur);rebuild()}
+// ---- audio graph
+const mus=new Audio();mus.loop=true;let AC,master,monitor,recDest,mGain,an,buf,lastVoice=0,ringNodes=[];
+function audioInit(){if(AC)return;AC=new AudioContext();master=AC.createGain();monitor=AC.createGain();recDest=AC.createMediaStreamDestination();master.connect(monitor);monitor.connect(AC.destination);master.connect(recDest);
+ const vs=AC.createMediaElementSource(S.aud);vs.connect(master);an=AC.createAnalyser();an.fftSize=1024;buf=new Float32Array(1024);vs.connect(an);
+ const ms=AC.createMediaElementSource(mus);mGain=AC.createGain();mGain.gain.value=0;ms.connect(mGain);mGain.connect(master)}
+function ring(){if(!AC)return;const n=AC.currentTime+.05;ringNodes=[];const out=AC.createGain();out.gain.value=.28;out.connect(master);
+ [0,1.25].forEach(st=>{[440,480].forEach(f=>{const o=AC.createOscillator(),g=AC.createGain(),lfo=AC.createOscillator(),lg=AC.createGain();o.frequency.value=f;lfo.frequency.value=20;lg.gain.value=.5;g.gain.value=.5;lfo.connect(lg);lg.connect(g.gain);o.connect(g);g.connect(out);
+  const a=n+st;g.gain.setValueAtTime(0,a);g.gain.linearRampToValueAtTime(.5,a+.02);o.start(a);lfo.start(a);o.stop(a+.95);lfo.stop(a+.95);ringNodes.push(o,lfo)})});
+ const pk=n+2.75,o=AC.createOscillator(),g=AC.createGain();o.type='square';o.frequency.setValueAtTime(1500,pk);g.gain.setValueAtTime(.12,pk);g.gain.exponentialRampToValueAtTime(.001,pk+.06);o.connect(g);g.connect(master);o.start(pk);o.stop(pk+.08);ringNodes.push(o)}
+function stopRing(){ringNodes.forEach(o=>{try{o.stop()}catch(e){}});ringNodes=[]}
+function duck(T){if(!AC||!an)return;an.getFloatTimeDomainData(buf);let s=0;for(const x of buf)s+=x*x;const db=20*Math.log10(Math.sqrt(s/buf.length)+1e-9),now=performance.now();
+ if(db>CFG.VOICE_DB)lastVoice=now;const voice=now-lastVoice<CFG.HOLD_MS;let g=voice?CFG.MUSIC_DUCKED:CFG.MUSIC_VOL;g*=clamp01((T-CFG.INTRO)/1.5)*clamp01((S.total-T)/1.5);mGain.gain.setTargetAtTime(g,AC.currentTime,voice?.12:.6)}
+const clamp01=x=>Math.min(1,Math.max(0,x));
+// ---- transport
+function setT(T){S.T=Math.max(0,T);if(S.playing)S.t0=performance.now()-S.T*1000;if(S.aud&&S.audDur){S.aud.currentTime=clamp01((S.T-S.VO)/S.audDur)*S.audDur*(S.T>=S.VO?1:0)}S.rang=S.T>.3}
+async function play(){if(!S.aud)S.aud=new Audio();audioInit();await AC.resume();if(S.T>=S.total-.1)setT(0);S.t0=performance.now()-S.T*1000;S.playing=true;if(S.T<.3&&!S.rang&&CFG.INTRO>0){ring();S.rang=true}}
+function pause(){S.playing=false;if(S.aud)S.aud.pause();mus.pause();stopRing()}
+function loop(){if(S.playing){const T=(performance.now()-S.t0)/1000;S.T=T;const a=S.aud;
+  if(a&&a.src&&T>=S.VO){const want=T-S.VO;if(a.paused&&want<S.audDur)a.play().catch(()=>0);else if(Math.abs(a.currentTime-want)>.35)a.currentTime=want}
+  if(mus.src){if(T>=CFG.INTRO&&mus.paused)mus.play().catch(()=>0)}
+  if(T>=S.total){S.playing=false;pause();S.T=S.total;onEnd&&onEnd()}}
+ R.draw(cx,cv.width,cv.height,S.T,S);$('#tm').textContent=S.T.toFixed(1)+'s';if(!seeking)$('#seek').value=S.T;duck(S.T);requestAnimationFrame(loop)}
+let seeking=false,onEnd=null,exporting=false;
+// ---- UI wiring
+$('#fa').onchange=e=>{const f=e.target.files[0];if(!f)return;if(!S.aud){S.aud=new Audio()}S.aud.src=URL.createObjectURL(f);S.aud.onloadedmetadata=()=>{S.audDur=S.aud.duration;reparse();if(!rawSegs.length&&gemKey()&&confirm('অডিও পাওয়া গেছে। Gemini দিয়ে অটোমেটিক লেখা ও টাইমিং তৈরি করব?'))geminiTranscribe()}};
+$('#fj').onchange=async e=>{const f=e.target.files[0];if(!f)return;const txt=await f.text();try{const r=/\.srt$/i.test(f.name)||/-->/.test(txt.slice(0,400))?parseSRT(txt):parseJSON(JSON.parse(txt));rawSegs=r.segs;rawTitle=r.title;S.subtitle=typeof r.subtitle=='string'?r.subtitle:'';if(rawTitle&&!$('#ti').value)$('#ti').value=rawTitle;reparse()}catch(err){alert('ফাইল পড়া যায়নি: '+err.message)}};
+$('#fb').onchange=e=>{const f=e.target.files[0];if(!f)return;const im=new Image();im.onload=()=>S.bgImg=im;im.src=URL.createObjectURL(f)};
+$('#fm').onchange=e=>{const f=e.target.files[0];if(f)mus.src=URL.createObjectURL(f)};
+$('#lg').onchange=e=>{CFG.MODE=e.target.value;rebuild()};$('#th').onchange=e=>CFG.THEME=e.target.value;$('#hd').oninput=e=>CFG.HANDLE=e.target.value.trim();$('#io').onchange=e=>{CFG.INTRO_ON=e.target.checked;rebuild()};
+$('#ti').oninput=reparse;$('#fs').oninput=e=>{CFG.FONT_SCALE=+e.target.value;rebuild()};$('#mv').oninput=e=>CFG.MUSIC_VOL=+e.target.value;
+$('#sz').onchange=e=>{const[w,h]=e.target.value.split('x').map(Number);cv.width=w;cv.height=h;stage.style.setProperty('--ar',w/h);rebuild()};
+$('#pp').onclick=()=>S.playing?pause():play();$('#rs').onclick=()=>{pause();setT(0)};
+$('#seek').oninput=e=>{seeking=true;setT(+e.target.value)};$('#seek').onchange=()=>seeking=false;
+const save=(blob,name)=>{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},4000)};
+// EXPORT: record the native-size canvas + clean audio mix, from 0 to the end (real time)
+$('#exp').onclick=async()=>{if(exporting)return;if(!S.segs.length){alert('আগে JSON/SRT ফাইল দিন');return}exporting=true;pause();setT(0);const btn=$('#exp'),W=cv.width,H=cv.height;
+ if(!S.aud)S.aud=new Audio();audioInit();await AC.resume();
+ const mime=['video/mp4;codecs=avc1,mp4a.40.2','video/webm;codecs=vp9,opus','video/webm'].find(m=>MediaRecorder.isTypeSupported(m));
+ const rec=new MediaRecorder(new MediaStream([...cv.captureStream(30).getVideoTracks(),...recDest.stream.getAudioTracks()]),{mimeType:mime,videoBitsPerSecond:Math.round(Math.max(12e6,W*H*30*.2)),audioBitsPerSecond:256e3}),ch=[];
+ rec.ondataavailable=e=>e.data.size&&ch.push(e.data);const prog=setInterval(()=>btn.textContent='এক্সপোর্ট হচ্ছে… '+Math.round(S.T/S.total*100)+'% (ট্যাব খোলা রাখুন)',400);
+ rec.onstop=()=>{clearInterval(prog);btn.textContent='⬇ ভিডিও এক্সপোর্ট (ফুল রেজুলেশন)';exporting=false;onEnd=null;save(new Blob(ch,{type:mime.split(';')[0]}),'story_video_'+W+'x'+H+'.'+(mime.startsWith('video/mp4')?'mp4':'webm'))};
+ onEnd=()=>setTimeout(()=>rec.state!='inactive'&&rec.stop(),400);rec.start(1000);await play()};
+// ---- auto timing from script + voice
+let ALR=null,pvT=0;const st=m=>$('#al-st').textContent=m,fmt=x=>(+x).toFixed(2);
+async function decodeAudio16k(){const buf=await (await fetch(S.aud.src)).arrayBuffer(),ac=new (window.AudioContext||window.webkitAudioContext)({sampleRate:16000}),ab=await ac.decodeAudioData(buf),x=ab.getChannelData(0),dur=ab.duration;ac.close();return{x,dur}}
+async function decodeEnv(){const{x,dur}=await decodeAudio16k();return{db:AL.envelope(x,16000),dur}}
+// ---- FULLY AUTOMATIC: audio only -> Google AI Studio Gemini transcribe (word timestamps) -> sentences -> player
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const bs=m=>{$('#bst').textContent=m;$('#al-st').textContent=m};
+const gemKey=()=>$('#gk').value.trim()||'AQ.Ab8RN6JDFj6rpPKhzjO4ur9agF2zafkoq55UtTyc5XUZHSXP_g',gemModel=()=>$('#gm').value.trim()||'gemini-3.5-transcribe';
+try{$('#gk').value=localStorage.getItem('svm_gem_key')||'AQ.Ab8RN6JDFj6rpPKhzjO4ur9agF2zafkoq55UtTyc5XUZHSXP_g';$('#gm').value=localStorage.getItem('svm_gem_model')||'gemini-3.5-transcribe'}catch(e){}
+$('#gk').oninput=$('#gm').oninput=()=>{try{localStorage.setItem('svm_gem_key',gemKey());localStorage.setItem('svm_gem_model',gemModel())}catch(e){}};
+function wavBlob(f,sr){const n=f.length,b=new ArrayBuffer(44+n*2),v=new DataView(b),w=(o,s)=>{for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i))};
+ w(0,'RIFF');v.setUint32(4,36+n*2,true);w(8,'WAVEfmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,sr,true);v.setUint32(28,sr*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);w(36,'data');v.setUint32(40,n*2,true);
+ for(let i=0;i<n;i++){const s=Math.max(-1,Math.min(1,f[i]));v.setInt16(44+i*2,s<0?s*32768:s*32767,true)}return new Blob([b],{type:'audio/wav'})}
+const blobB64=b=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(',')[1]);r.onerror=()=>rej(r.error);r.readAsDataURL(b)});
+async function gemChunk(blob,lang,label){const data=await blobB64(blob),url='https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(gemModel())+':generateContent',
+ body=JSON.stringify({contents:[{parts:[{inlineData:{mimeType:'audio/wav',data}}]}],generationConfig:{audioTranscriptionConfig:{languageCodes:[lang],wordTimestamp:true}}});
+ for(let a=0;;a++){let r;try{r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':gemKey()},body})}catch(e){if(a>=3)throw new Error('Gemini-তে যোগাযোগ হয়নি (ইন্টারনেট চেক করুন)');await sleep(2500*(a+1));continue}
+  if(r.ok)return await r.json();const t=await r.text();
+  if((r.status==429||r.status>=500)&&a<4){bs(label+': সার্ভার ব্যস্ত ('+r.status+'), আবার চেষ্টা হচ্ছে… ('+(a+1)+'/4)');await sleep(5000*(a+1));continue}
+  throw new Error('Gemini '+r.status+(r.status==400&&/API key/i.test(t)?' — API Key ভুল':r.status==403?' — Key-তে অনুমতি নেই':'')+': '+t.slice(0,220))}}
+function gemWords(j,off){const W=[],T=[];for(const c of j.candidates||[])for(const p of (c.content&&c.content.parts)||[]){const t=p.audioTranscription;
+ if(t&&t.words)t.words.forEach(w=>{const s=parseFloat(w.startOffset),e=parseFloat(w.endOffset);if(w.word&&isFinite(s)&&isFinite(e))W.push({w:String(w.word),s:s+off,e:e+off})});if(p.text)T.push(p.text)}return{W,txt:T.join(' ')}}
+function wordsToSegs(W){const out=[];let cur=[];const flush=()=>{if(!cur.length)return;const s=cur[0].s,e=Math.max(cur[cur.length-1].e,s+.2);out.push({t:cur.map(x=>x.w).join(' '),s,e,spans:cur.map(x=>[x.s,Math.max(x.e,x.s+.02)])});cur=[]};
+ W.forEach((x,i)=>{cur.push(x);const nx=W[i+1],gap=nx?nx.s-x.e:9;if(/[।?!.…][”"’']?$/.test(x.w)||gap>.9||cur.length>=14)flush()});flush();return out}
+let gBusy=false;
+async function geminiTranscribe(){if(gBusy)return;if(!S.aud||!S.aud.src){bs('আগে "১) ভয়েস অডিও" সিলেক্ট করুন');return}if(!gemKey()){bs('আগে Gemini API Key দিন (aistudio.google.com থেকে)');return}
+ gBusy=true;try{bs('অডিও পড়া হচ্ছে…');await sleep(40);const{x,dur}=await decodeAudio16k();S.audDur=dur;const db=AL.envelope(x,16000),bounds=AL.sliceBounds(db,300),lang=CFG.MODE=='en'?'en-US':'bn-BD',N=bounds.length-1;let W=[];const T=[];
+  for(let i=0;i<N;i++){const a=Math.floor(bounds[i]*16000),b=Math.floor(bounds[i+1]*16000),lb='অংশ '+(i+1)+'/'+N;bs('Gemini-তে লেখা বের হচ্ছে… '+lb);const j=await gemChunk(wavBlob(x.subarray(a,b),16000),lang,lb),r=gemWords(j,bounds[i]);W=W.concat(r.W);T.push(r.txt)}
+  let segs,note='';
+  if(W.length)segs=wordsToSegs(W);
+  else{const sents=AL.splitScript(T.join('\n').replace(/([।?!])\s+/g,'$1\n'));if(!sents.length)throw new Error('অডিও থেকে লেখা পাওয়া যায়নি');const res=AL.align(db,sents,dur);if(!res)throw new Error('অডিওতে কথা পাওয়া যায়নি');segs=res.segs.map((g,i)=>({t:sents[i],s:g.s,e:g.e,spans:g.spans}));note=' (Gemini শব্দ-সময় দেয়নি, তাই সময় পজ থেকে আনুমানিক)'}
+  rawSegs=segs;reparse();ALR={sents:segs.map(g=>g.t),segs:segs.map(g=>({s:g.s,e:g.e,spans:g.spans,flag:false})),info:{},src:'gemini'};$('#al-fl').checked=false;tp=0;renderTable();setT(0);
+  bs('✔ অটো হয়ে গেছে — '+segs.length+' বাক্য ভিডিওতে লোড হয়েছে'+note+'। ▶ চেপে দেখুন। AI ভুল শুনতে পারে, তাই "স্ক্রিপ্ট থাকলে: অটো-টাইমিং" বাটনে এডিটর খুলে লেখা ঠিক করে "প্রয়োগ করুন" চাপুন।')}
+ catch(e){console.error(e);bs('সমস্যা: '+e.message)}gBusy=false}
+let tp=0;const PG=200;
+function renderTable(){const only=$('#al-fl').checked,box=$('#al-tb');if(!ALR){box.innerHTML='';return}let h='<table style="width:100%;border-collapse:collapse">',n=0,shown=0;
+ ALR.segs.forEach((g,i)=>{if(only&&!g.flag)return;n++;if(n<=tp*PG||n>(tp+1)*PG)return;shown++;h+=`<tr style="border-bottom:1px solid #222"><td style="padding:4px;width:46px">${g.flag?'⚠ ':''}${i+1}</td><td style="width:84px"><input data-i="${i}" data-k="s" type="number" step=".05" value="${fmt(g.s)}" style="width:76px"></td><td style="width:84px"><input data-i="${i}" data-k="e" type="number" step=".05" value="${fmt(g.e)}" style="width:76px"></td><td style="width:40px"><button data-p="${i}">▶</button></td><td style="padding:4px"><input data-i="${i}" data-k="t" type="text" value="${ALR.sents[i].replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;')}" style="width:100%;background:#15151c;color:#fff;border:1px solid #2a2a33;border-radius:6px;padding:4px;font:16px 'Hind Siliguri',Inter,sans-serif"></td></tr>`});
+ const pages=Math.max(1,Math.ceil(n/PG));box.innerHTML=h+'</table>'+(n==0?'<div>কোনো লাইন নেই ✔</div>':'')+`<div style="display:flex;gap:8px;align-items:center;margin-top:8px"><button id="pg-p">◀</button><span>পেজ ${tp+1}/${pages} (মোট ${n} লাইন)</span><button id="pg-n">▶</button></div>`;
+ $('#pg-p').onclick=()=>{tp=Math.max(0,tp-1);renderTable()};$('#pg-n').onclick=()=>{tp=Math.min(pages-1,tp+1);renderTable()}}
+$('#al').onclick=()=>{$('#ed').style.display='block'};$('#au').onclick=geminiTranscribe;$('#au2').onclick=geminiTranscribe;$('#al-x').onclick=()=>{$('#ed').style.display='none'};
+$('#al-js').onclick=()=>{$('#sc').value=rawSegs.map(x=>x.t).join('\n')};
+$('#al-fl').onchange=()=>{tp=0;renderTable()};
+$('#al-go').onclick=async()=>{if(!S.aud||!S.aud.src){st('আগে প্যানেল থেকে ভয়েস অডিও সিলেক্ট করুন');return}const sents=AL.splitScript($('#sc').value);if(!sents.length){st('আগে স্ক্রিপ্ট পেস্ট করুন');return}
+ try{st('অডিও পড়া হচ্ছে… (লম্বা ফাইলে কয়েক মিনিট লাগতে পারে)');await new Promise(r=>setTimeout(r,40));const{db,dur}=await decodeEnv();S.audDur=dur;st('টাইমিং মেলানো হচ্ছে…');await new Promise(r=>setTimeout(r,40));
+  const res=AL.align(db,sents,dur);if(!res){st('অডিওতে কথা পাওয়া যায়নি');return}ALR={sents,segs:res.segs,info:res.info};
+  const i=res.info;st((i.mode=='dp'?'✔ ':'⚠ ')+sents.length+' বাক্য, '+i.K+' স্পিচ-ব্লক।'+(i.mode=='dp'?' সন্দেহজনক লাইন: '+i.flagged+' টি (⚠)।':' অডিওতে পজ কম, তাই সময় আনুমানিক — সব লাইন যাচাই করুন।')+(i.flagged?' ⚠ লাইনগুলোতে ▶ চেপে শুনে মিলিয়ে নিন, দরকারে সময় ঠিক করুন।':' সব ঠিক মনে হচ্ছে।'));
+  $('#al-fl').checked=i.flagged>0&&sents.length>60;tp=0;renderTable()}catch(err){st('সমস্যা: '+err.message)}};
+$('#al-tb').addEventListener('input',e=>{const i=+e.target.dataset.i,k=e.target.dataset.k;if(!ALR||isNaN(i)||!k)return;if(k=='t'){ALR.sents[i]=e.target.value;return}const g=ALR.segs[i];g[k]=+e.target.value;g.spans=[[g.s,g.e]];g.flag=false});
+$('#al-tb').addEventListener('click',e=>{const p=e.target.dataset.p;if(p==null||!ALR||!S.aud)return;const g=ALR.segs[+p];pause();S.aud.currentTime=Math.max(0,g.s-.4);S.aud.play();clearTimeout(pvT);pvT=setTimeout(()=>S.aud.pause(),(g.e-g.s+.9)*1000)});
+$('#al-ap').onclick=()=>{if(!ALR){st('আগে টাইমিং বের করুন');return}rawSegs=ALR.segs.map((g,i)=>({t:ALR.sents[i],s:g.s,e:g.e,spans:g.spans}));reparse();st('✔ প্রয়োগ হয়েছে — এখন প্লে বা এক্সপোর্ট করতে পারেন');$('#ed').style.display='none'};
+$('#al-dl').onclick=()=>{if(!ALR){st('আগে টাইমিং বের করুন');return}const r3=x=>Math.round(x*1000)/1000,o={title:$('#ti').value.trim()||rawTitle||'',subtitle:S.subtitle||'',language:CFG.MODE,audioDuration:r3(S.audDur),segments:ALR.segs.map((g,i)=>({id:i+1,text:ALR.sents[i],start:r3(g.s),end:r3(g.e),spans:g.spans.map(x=>[r3(x[0]),r3(x[1])])}))};save(new Blob([JSON.stringify(o,null,1)],{type:'application/json'}),'story_timings.json')};
+addEventListener('keydown',e=>{if(e.target.tagName=='INPUT'||e.target.tagName=='TEXTAREA')return;if(e.key.toLowerCase()=='h')$('#panel').classList.toggle('hide');if(e.code=='Space'){e.preventDefault();$('#pp').click()}});
+Promise.all([['700 20px "Hind Siliguri"','অআ'],['600 20px "Hind Siliguri"','অআ'],['600 20px Inter','Ab'],['800 20px Inter','Ab']].map(([f,s])=>document.fonts.load(f,s).catch(()=>0))).then(()=>{rebuild();loop()});
+</script>
+</body>
+</html>
